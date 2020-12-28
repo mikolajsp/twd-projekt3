@@ -43,8 +43,13 @@ for thread in os.listdir(root):
                         message_id+=1
 
 df = pd.DataFrame(output, columns=["id", "thread_type", "number_of_people", "thread_name", "author", "date", "year", "month", "day", "hour", "minute", "second", "chars", "words"])
-                        
+
+with open("owner.txt", "w", encoding="utf-8") as ownerfile:
+    ownerfile.write(owner)
+
+
 print(df.head())
+
 df.to_csv("messages.csv", index=False)
 print(str(len(df))+ " wiadomości")
 
