@@ -7,3 +7,4 @@ test.csv
 messages.csv
 script.R
 owner.txt
+.venv/

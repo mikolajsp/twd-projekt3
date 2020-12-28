@@ -18,15 +18,25 @@ def turn(val, owner):
 df = pd.read_csv("messages.csv")
 df["who"] = df["author"].apply(turn, args=(owner,))
 
-fig = px.histogram(df, x="date", color="who", title="Your messages over time", labels={"date": "Date", "who": "Who sent the message"})
-# fig.show()
+fig_1 = px.histogram(df, x="date", color="who", title="Your messages over time", labels={"date": "Date", "who": "Who sent the message"})
+fig_1.update_yaxes(title_text="Number of messages")
+
+
+fig_2 = px.histogram(df, x="hour", color="who", range_x=[0, 23], nbins=24,title="Breakdown of messages sent by hour", color_discrete_sequence=["#264653", "#2a9d8f"], labels={"who": "Who sent the message"})
+fig_2.update_yaxes(title_text="Number of messages")
+fig_2.update_xaxes(title_text="Hour of day", nticks=24)       
+fig_2.update_layout(bargap=0.1)
+
 
 tab1_layout = html.Div([
     html.H2("Overview of your data"),
     dcc.Graph(
         id="default-histogram",
-        figure=fig
-    )
+        figure= fig_1),
+    dcc.Graph(
+        id="hour-histogram",
+        figure=fig_2
+        )
 ])
 
 tab2_layout = html.Div([
@@ -71,9 +81,21 @@ def render_content(tab):
 def draw_person_histogram(person):
     if person:
         df_slice = df.loc[df["thread_name"]==person]
-        return dcc.Graph(id="person-histogram",
+
+
+        # prepare second histogram
+        hour_plot = px.histogram(df_slice, x="hour", color="author", range_x=[0, 23], nbins=24,title="Breakdown of messages sent by hour", color_discrete_sequence=["#264653", "#2a9d8f"], labels={"author": "Author of the message"})
+        hour_plot.update_yaxes(title_text="Number of messages")
+        hour_plot.update_xaxes(title_text="Hour of day", nticks=24)       
+        hour_plot.update_layout(bargap=0.1)
+
+
+        return [dcc.Graph(id="person-histogram",
             figure=px.histogram(df_slice, x="date", color="author")
-            )
+            ),
+            dcc.Graph(id="person-hour-histogram",
+            figure=hour_plot)
+        ]
 
 if __name__ == "__main__":
     app.run_server(debug=True)
