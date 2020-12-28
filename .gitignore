@@ -1,0 +1,8 @@
+messages/
+test.csv
+.vscode/
+.Rproj.user/
+*.Rproj
+.Rhistory
+messages.csv
+script.R
