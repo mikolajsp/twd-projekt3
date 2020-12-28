@@ -39,10 +39,10 @@ for thread in os.listdir(root):
                             enc = content.encode('iso-8859-1').decode('utf-8')
                             chars = len(content)
                             words = len(content.split(" "))
-                        output.append([message_id, threadtype, numberofpeople, threadname, author, whole_date, year, month, day, hour, minute, second, chars, words])
+                        output.append([message_id, threadtype, numberofpeople, threadname, author, whole_date, year, month, day, hour, minute, second, chars, words, enc])
                         message_id+=1
 
-df = pd.DataFrame(output, columns=["id", "thread_type", "number_of_people", "thread_name", "author", "date", "year", "month", "day", "hour", "minute", "second", "chars", "words"])
+df = pd.DataFrame(output, columns=["id", "thread_type", "number_of_people", "thread_name", "author", "date", "year", "month", "day", "hour", "minute", "second", "chars", "words", "content"])
 
 with open("owner.txt", "w", encoding="utf-8") as ownerfile:
     ownerfile.write(owner)

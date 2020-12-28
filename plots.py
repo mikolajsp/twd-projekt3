@@ -5,6 +5,9 @@ from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import pandas as pd
 import plotly.express as px
+from wordcloud import WordCloud
+
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 with open("owner.txt", mode="r", encoding="utf-8") as ownerfile:
     owner = ownerfile.read()
@@ -46,7 +49,7 @@ tab2_layout = html.Div([
     )
 ])
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.config.suppress_callback_exceptions=True
 
@@ -89,12 +92,43 @@ def draw_person_histogram(person):
         hour_plot.update_xaxes(title_text="Hour of day", nticks=24)       
         hour_plot.update_layout(bargap=0.1)
 
+        #prepare wordclouds
+
+        yourtext = df_slice.loc[df_slice["author"]==owner].content.str.cat(sep=" ")
+        yourwc = WordCloud(width=1200, height=600, background_color="rgba(255, 255, 255, 0)", mode="RGBA").generate(yourtext)
+        yourwcimg = yourwc.to_image()
+
+        theirtext = df_slice.loc[df_slice["author"]!=owner].content.str.cat(sep=" ")
+        theirwc = WordCloud(width=1200, height=600, background_color="rgba(255, 255, 255, 0)", mode="RGBA").generate(theirtext)
+        theirwcimg = theirwc.to_image()
 
         return [dcc.Graph(id="person-histogram",
             figure=px.histogram(df_slice, x="date", color="author")
             ),
             dcc.Graph(id="person-hour-histogram",
-            figure=hour_plot)
+            figure=hour_plot),
+            html.Div(id="wordcloud-container",
+            children=html.Div(
+                children=[
+                html.Div(
+                    children=[
+                        html.H2(children=["Your wordcloud"]),
+                        html.Img(src=yourwcimg, style={"display": "block", "width": "100%"})
+                    ],
+                    style={"display": "inline-block","marginLeft" : "auto", "marginRight" : "auto", "width": "40%", "paddingRight": "3%"}
+                ),
+                html.Div(
+                    children=[
+                        html.H2(children=["Their wordcloud"]),
+                        html.Img(src=theirwcimg, style={"display": "block", "width": "100%"})
+                    ],
+                    style={"display": "inline-block","marginLeft" : "auto", "marginRight" : "auto", "width": "40%", "paddingLeft": "3%"}
+                )
+                
+            ],
+            style={"textAlign":"center"}
+            )
+            )
         ]
 
 if __name__ == "__main__":
