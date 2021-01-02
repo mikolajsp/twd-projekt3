@@ -3,7 +3,8 @@ import json
 import datetime
 import pandas as pd
 
-root = "./messages/inbox"
+basefile = os.path.dirname(os.path.abspath(__file__))
+root = os.path.join(basefile, "./messages/inbox")
 message_id = 1
 output = []
 owner = ""
@@ -44,13 +45,17 @@ for thread in os.listdir(root):
 
 df = pd.DataFrame(output, columns=["id", "thread_type", "number_of_people", "thread_name", "author", "date", "year", "month", "day", "hour", "minute", "second", "chars", "words", "content"])
 
-with open("owner.txt", "w", encoding="utf-8") as ownerfile:
+
+owfilepath = os.path.join(basefile, "owner.txt")
+with open(owfilepath , "w", encoding="utf-8") as ownerfile:
     ownerfile.write(owner)
 
 
 print(df.head())
 
-df.to_csv("messages.csv", index=False)
+messagefile = os.path.join(basefile,"messages.csv")
+
+df.to_csv(messagefile, index=False)
 print(str(len(df))+ " wiadomości")
 
 

@@ -1,4 +1,5 @@
 import dash
+import os
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
@@ -9,7 +10,11 @@ from wordcloud import WordCloud
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-with open("owner.txt", mode="r", encoding="utf-8") as ownerfile:
+
+basefile = os.path.dirname(os.path.abspath(__file__))
+owfile = os.path.join(basefile, "owner.txt")
+
+with open(owfile, mode="r", encoding="utf-8") as ownerfile:
     owner = ownerfile.read()
 
 
@@ -19,8 +24,10 @@ def turn(val, owner):
     else:
         return "Someone else"
 
+messagefile = os.path.join(basefile, "messages.csv")
 
-df = pd.read_csv("messages.csv")
+
+df = pd.read_csv(messagefile)
 df["who"] = df["author"].apply(turn, args=(owner,))
 
 fig_1 = px.histogram(df, x="date", color="who", title="Your messages over time", labels={
