@@ -54,7 +54,9 @@ tab1_layout = html.Div([
 ])
 
 tab2_layout = html.Div([
-    dcc.Dropdown(id="person-dropdown"),
+    dcc.Dropdown(
+        id="person-dropdown",
+        options = [{"label": name, "value": name} for name in df.loc[df["thread_type"] == "Regular"].thread_name.unique()]),
     html.Div(
         id="person-histogram-container"
     )
@@ -74,12 +76,11 @@ app.layout = html.Div([
 ])
 
 
-@app.callback(Output("person-dropdown", "options"), [Input("tabs", "value")])
-def fill_dropdown(tab):
-    if tab == "tab2":
-        lis = df.loc[df["thread_type"] == "Regular"].thread_name.unique()
-        opts = [{"label": name, "value": name} for name in lis]
-        return opts
+# @app.callback(Output("person-dropdown", "options"), [Input("tabs", "value")])
+# def fill_dropdown(tab):
+#     lis = df.loc[df["thread_type"] == "Regular"].thread_name.unique()
+#     opts = [{"label": name, "value": name} for name in lis]
+#     return opts
 
 
 @app.callback(Output("content", "children"), Input("tabs", "value"))
