@@ -13,7 +13,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 #https://github.com/fergiemcdowall/stopword
 
 stop_words = [
-  'a', 'aby', 'ach', 'acz', 'aczkolwiek', 'aj', 'albo', 'ale', 'ależ', 'ani',
+  'a', 'aby', 'ach', 'acz', 'aczkolwiek', 'aj', 'albo', 'ale', 'ależ', 'ani', 'sie',
   'aż', 'bardziej', 'bardzo', 'bo', 'bowiem', 'by', 'byli', 'bynajmniej',
   'być', 'był', 'była', 'było', 'były', 'będzie', 'będą', 'cali', 'cała',
   'cały', 'ci', 'cię', 'ciebie', 'co', 'cokolwiek', 'coś', 'czasami',
@@ -62,6 +62,10 @@ def turn(val, owner):
 
 messagefile = os.path.join(basefile, "messages.csv")
 
+# Reactions dataframe
+reactionfile = os.path.join(basefile, "reactions.csv")
+df_reactions = pd.read_csv(reactionfile)
+df_reactions["who"] = df_reactions["reacting_person"].apply(turn, args=(owner,))
 
 df = pd.read_csv(messagefile)
 df["who"] = df["author"].apply(turn, args=(owner,))
