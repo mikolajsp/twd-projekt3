@@ -4,7 +4,7 @@ import datetime
 import pandas as pd
 
 basefile = os.path.dirname(os.path.abspath(__file__))
-root = os.path.join(basefile, "./messages/inbox")
+root = os.path.join(basefile, "messages", "inbox")
 message_id = 1
 output = []
 owner = ""
