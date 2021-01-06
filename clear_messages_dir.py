@@ -2,7 +2,7 @@ import os
 import shutil
 
 basefile = os.path.dirname(os.path.abspath(__file__))
-root = os.path.join(basefile, "messages\inbox")
+root = os.path.join(basefile, "messages","inbox")
 for thread in os.listdir(root):
     thread_path = os.path.join(root, thread)
     for file in os.listdir(thread_path):
