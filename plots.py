@@ -139,7 +139,10 @@ tab2_layout = html.Div([
 ])
 
 tab3_layout = html.Div([
-            html.H3("Tab 3 content")
+            html.H2("Data of a group conversation thread"),
+            html.P("Select a group:"),
+            dcc.Dropdown(id="person-dropdown",
+            options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()])
         ])
 
 
