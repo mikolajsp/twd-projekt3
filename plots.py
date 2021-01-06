@@ -8,10 +8,53 @@ import pandas as pd
 import plotly.express as px
 from wordcloud import WordCloud
 
+
+## HELPER FUNCTIONS
+
+def generateMessageOwner(val, owner):
+    if val == owner:
+        return "You"
+    else:
+        return "Someone else"
+
+def generalTimeHistogram():
+    timeHistogram = px.histogram(df, x="date", color="who", title="Your messages over time", labels={
+                     "date": "Date", "who": "Who sent the message"})
+    timeHistogram.update_yaxes(title_text="Number of messages") 
+    return timeHistogram
+
+def generalHourHistogram():
+    hourHistogram = px.histogram(df, x="hour", color="who", range_x=[0, 23], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
+                     "#264653", "#2a9d8f"], labels={"who": "Who sent the message"})
+    hourHistogram.update_yaxes(title_text="Number of messages")
+    hourHistogram.update_xaxes(title_text="Hour of day", nticks=24)
+    hourHistogram.update_layout(bargap=0.1)
+    return hourHistogram
+
+def generateWordCloudImage(thread, isowner):
+    wcimg = None
+    df_slice = df.loc[df["thread_name"] == thread]
+    if isowner:
+        text = df_slice.loc[df_slice["author"] == owner].content.str.cat(sep=" ")
+    else:
+        text = df_slice.loc[df_slice["author"] != owner].content.str.cat(sep=" ")
+    if len(text) > 0:
+            wordcloud = WordCloud(
+                width=1200,
+                height=600,
+                background_color="rgba(255, 255, 255, 0)",
+                mode="RGBA",
+                stopwords=stop_words).generate(text)
+            wcimg = wordcloud.to_image()
+    return wcimg
+    
+
+## PREPARING GLOBAL VARIABLES
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
+# words not to include in the wordclouds sourced from
 # https://github.com/fergiemcdowall/stopword
-
 stop_words = [
     'a', 'aby', 'ach', 'acz', 'aczkolwiek', 'aj', 'albo', 'ale', 'ależ', 'ani', 'sie',
     'aż', 'bardziej', 'bardzo', 'bo', 'bowiem', 'by', 'byli', 'bynajmniej',
@@ -47,62 +90,60 @@ stop_words = [
     'znów', 'został', 'żaden', 'żadna', 'żadne', 'żadnych', 'że', 'żeby',
     '$', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '_']
 
-basefile = os.path.dirname(os.path.abspath(__file__))
-owfile = os.path.join(basefile, "owner.txt")
+basedirectory = os.path.dirname(os.path.abspath(__file__))
 
-with open(owfile, mode="r", encoding="utf-8") as ownerfile:
+# getting the messages' owners' name
+ownernamepath = os.path.join(basedirectory, "owner.txt")
+with open(ownernamepath, mode="r", encoding="utf-8") as ownerfile:
     owner = ownerfile.read()
 
-
-def turn(val, owner):
-    if val == owner:
-        return "You"
-    else:
-        return "Someone else"
-
-
-messagefile = os.path.join(basefile, "messages.csv")
-
-# Reactions dataframe
-reactionfile = os.path.join(basefile, "reactions.csv")
+# preparing reactions dataframe
+reactionfile = os.path.join(basedirectory, "reactions.csv")
 df_reactions = pd.read_csv(reactionfile)
 df_reactions["who"] = df_reactions["reacting_person"].apply(
-    turn, args=(owner,))
+    generateMessageOwner, args=(owner,))
 
+# preparing main messages dataframe
+messagefile = os.path.join(basedirectory, "messages.csv")
 df = pd.read_csv(messagefile)
-df["who"] = df["author"].apply(turn, args=(owner,))
+df["who"] = df["author"].apply(generateMessageOwner, args=(owner,))
 
-fig_1 = px.histogram(df, x="date", color="who", title="Your messages over time", labels={
-                     "date": "Date", "who": "Who sent the message"})
-fig_1.update_yaxes(title_text="Number of messages")
-
-
-fig_2 = px.histogram(df, x="hour", color="who", range_x=[0, 23], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
-                     "#264653", "#2a9d8f"], labels={"who": "Who sent the message"})
-fig_2.update_yaxes(title_text="Number of messages")
-fig_2.update_xaxes(title_text="Hour of day", nticks=24)
-fig_2.update_layout(bargap=0.1)
-
+## LAYOUT TEMPLATES FOR EACH TAB
 
 tab1_layout = html.Div([
     html.H2("Overview of your data"),
     dcc.Graph(
         id="default-histogram",
-        figure=fig_1),
+        figure=generalTimeHistogram()
+        ),
     dcc.Graph(
         id="hour-histogram",
-        figure=fig_2
+        figure=generalHourHistogram()
     )
 ])
 
 tab2_layout = html.Div([
+    html.H2("Data of a private conversation thread"),
+    html.P("Select a person:"),
     dcc.Dropdown(
         id="person-dropdown",
         options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "Regular"].thread_name.unique()]),
     html.Div(
-        id="person-histogram-container"
+        id="person-charts-container",
+        children=[
+            html.Div(id="person-time-histogram-container"),
+            html.Div(id="person-hour-histogram-container"),
+            html.Div(id="person-wordclouds-container")
+        ]
     )
 ])
+
+tab3_layout = html.Div([
+            html.H3("Tab 3 content")
+        ])
+
+
+## MAIN APP FUNCTIONALITY
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -117,14 +158,9 @@ app.layout = html.Div([
     html.Div(id="content")
 ])
 
+## CALLBACKS
 
-# @app.callback(Output("person-dropdown", "options"), [Input("tabs", "value")])
-# def fill_dropdown(tab):
-#     lis = df.loc[df["thread_type"] == "Regular"].thread_name.unique()
-#     opts = [{"label": name, "value": name} for name in lis]
-#     return opts
-
-
+# General tab selection callback
 @app.callback(Output("content", "children"), Input("tabs", "value"))
 def render_content(tab):
     if tab == "tab1":
@@ -132,86 +168,75 @@ def render_content(tab):
     elif tab == "tab2":
         return tab2_layout
     else:
-        return html.Div([
-            html.H3("Tab 3 content")
-        ])
+        return tab3_layout
 
 
-@app.callback(Output("person-histogram-container", "children"), Input("person-dropdown", "value"))
-def draw_person_histogram(person):
-    retlist = []
+# Second tab callbacks
+@app.callback(Output("person-time-histogram-container", "children"), Input("person-dropdown", "value"))
+def personTimeHistogram(person):
     if person:
         df_slice = df.loc[df["thread_name"] == person]
 
-        # prepare first histogram
-        person_plot = px.histogram(df_slice, x="date", color="author")
-        person_plot.update_yaxes(title_text="Number of messages")
-        person_plot.update_xaxes(title_text="Date")
+        personTimeHistogram = px.histogram(df_slice, x="date", color="author")
+        personTimeHistogram.update_yaxes(title_text="Number of messages")
+        personTimeHistogram.update_xaxes(title_text="Date")
 
-        retlist.append(
-            dcc.Graph(
+        return dcc.Graph(
                 id="person-histogram",
-                figure=person_plot
-            )
-        )
-
-        # prepare second histogram
-        hour_plot = px.histogram(df_slice, x="hour", color="author", range_x=[0, 23], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
+                figure=personTimeHistogram
+                )
+        
+@app.callback(Output("person-hour-histogram-container", "children"), Input("person-dropdown", "value"))
+def personHourHistogram(person):
+    if person:
+        df_slice = df.loc[df["thread_name"] == person]
+        personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[0, 23], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
                                  "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
-        hour_plot.update_yaxes(title_text="Number of messages")
-        hour_plot.update_xaxes(title_text="Hour of day", nticks=24)
-        hour_plot.update_layout(bargap=0.1)
+        personHourHistogram.update_yaxes(title_text="Number of messages")
+        personHourHistogram.update_xaxes(title_text="Hour of day", nticks=24)
+        personHourHistogram.update_layout(bargap=0.1)
 
-        retlist.append(
-            dcc.Graph(
+        return dcc.Graph(
                 id="person-hour-histogram",
-                figure=hour_plot
+                figure=personHourHistogram
             )
+        
+## this is a mess but we'll have to live with it for now
+@app.callback(Output("person-wordclouds-container", "children"), Input("person-dropdown", "value"))
+def personWordclouds(person):
+    if person:
+        yourWordcloud = generateWordCloudImage(person, True)
+        theirWordcloud = generateWordCloudImage(person, False)
+
+        return html.Div(id="wordcloud-container",
+                                        children=html.Div(
+                                            children=[
+                                                html.Div(
+                                                    children=[
+                                                        html.H2(
+                                                            children=["Your wordcloud"]),
+                                                        html.Img(src=yourWordcloud, style={
+                                                            "display": "block", "width": "100%"})
+                                                    ],
+                                                    style={"display": "inline-block", "marginLeft": "auto",
+                                                        "marginRight": "auto", "width": "40%", "paddingRight": "3%"}
+                                                ),
+                                                html.Div(
+                                                    children=[
+                                                        html.H2(
+                                                            children=["Their wordcloud"]),
+                                                        html.Img(src=theirWordcloud, style={
+                                                            "display": "block", "width": "100%"})
+                                                    ],
+                                                    style={"display": "inline-block", "marginLeft": "auto",
+                                                        "marginRight": "auto", "width": "40%", "paddingLeft": "3%"}
+                                                )
+
+                                            ],
+                                            style={"textAlign": "center"}
+                                        )
         )
 
-        # prepare wordclouds
-        yourtext = df_slice.loc[df_slice["author"]
-                                == owner].content.str.cat(sep=" ")
-
-        theirtext = df_slice.loc[df_slice["author"]
-                                 != owner].content.str.cat(sep=" ")
-
-        if len(yourtext) > 0 and len(theirtext) > 0:
-            yourwc = WordCloud(
-                width=1200, height=600, background_color="rgba(255, 255, 255, 0)", mode="RGBA", stopwords=stop_words).generate(yourtext)
-            yourwcimg = yourwc.to_image()
-            theirwc = WordCloud(
-                width=1200, height=600, background_color="rgba(255, 255, 255, 0)", mode="RGBA", stopwords=stop_words).generate(theirtext)
-            theirwcimg = theirwc.to_image()
-            retlist.append(html.Div(id="wordcloud-container",
-                                    children=html.Div(
-                                        children=[
-                                            html.Div(
-                                                children=[
-                                                    html.H2(
-                                                        children=["Your wordcloud"]),
-                                                    html.Img(src=yourwcimg, style={
-                                                        "display": "block", "width": "100%"})
-                                                ],
-                                                style={"display": "inline-block", "marginLeft": "auto",
-                                                       "marginRight": "auto", "width": "40%", "paddingRight": "3%"}
-                                            ),
-                                            html.Div(
-                                                children=[
-                                                    html.H2(
-                                                        children=["Their wordcloud"]),
-                                                    html.Img(src=theirwcimg, style={
-                                                        "display": "block", "width": "100%"})
-                                                ],
-                                                style={"display": "inline-block", "marginLeft": "auto",
-                                                       "marginRight": "auto", "width": "40%", "paddingLeft": "3%"}
-                                            )
-
-                                        ],
-                                        style={"textAlign": "center"}
-                                    )
-                                    ))
-    return retlist
 
 
 if __name__ == "__main__":
