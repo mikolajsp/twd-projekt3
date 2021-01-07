@@ -192,8 +192,12 @@ tab2_layout = html.Div([
 tab3_layout = html.Div([
     html.H2("Data of a group conversation thread"),
     html.P("Select a group:"),
-    dcc.Dropdown(id="person-dropdown",
-                 options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()])
+    dcc.Dropdown(id="group-dropdown",
+                 options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()]),
+    html.Div(id="groups-output",
+             children=[
+                 html.Div(id="group-most-messages-container")
+             ])
 ])
 
 
@@ -295,6 +299,27 @@ def personWordclouds(person):
                             style={"textAlign": "center"}
                         )
                         )
+
+
+# third tab callbacks
+
+@app.callback(Output("group-most-messages-container", "children"), Input("group-dropdown", "value"))
+def groupMostMessages(thread):
+    if thread:
+        df_sl = df.loc[df["thread_name"] == thread]
+        top = df_sl.groupby(["author"]).size(
+        ).sort_values(ascending=False).head(10)
+        neww = pd.DataFrame()
+        neww["count"] = top
+        neww["author"] = top.index
+
+        mostMessagesHistogram = px.bar(
+            y=neww["author"], x=neww["count"], orientation="h")
+        mostMessagesHistogram.update_yaxes(categoryorder="total ascending")
+
+        return dcc.Graph(id="mostMessages",
+                         figure=mostMessagesHistogram
+                         )
 
 
 if __name__ == "__main__":
