@@ -7,9 +7,10 @@ import plotly.graph_objects as go
 import pandas as pd
 import plotly.express as px
 from wordcloud import WordCloud
+from datetime import datetime
 
+# HELPER FUNCTIONS
 
-## HELPER FUNCTIONS
 
 def generateMessageOwner(val, owner):
     if val == owner:
@@ -17,39 +18,86 @@ def generateMessageOwner(val, owner):
     else:
         return "Someone else"
 
+
 def generalTimeHistogram():
     timeHistogram = px.histogram(df, x="date", color="who", title="Your messages over time", labels={
-                     "date": "Date", "who": "Who sent the message"})
-    timeHistogram.update_yaxes(title_text="Number of messages") 
+        "date": "Date", "who": "Who sent the message"})
+    timeHistogram.update_yaxes(title_text="Number of messages")
     return timeHistogram
+
 
 def generalHourHistogram():
     hourHistogram = px.histogram(df, x="hour", color="who", range_x=[0, 23], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
-                     "#264653", "#2a9d8f"], labels={"who": "Who sent the message"})
+        "#264653", "#2a9d8f"], labels={"who": "Who sent the message"})
     hourHistogram.update_yaxes(title_text="Number of messages")
     hourHistogram.update_xaxes(title_text="Hour of day", nticks=24)
     hourHistogram.update_layout(bargap=0.1)
     return hourHistogram
 
+
 def generateWordCloudImage(thread, isowner):
     wcimg = None
     df_slice = df.loc[df["thread_name"] == thread]
     if isowner:
-        text = df_slice.loc[df_slice["author"] == owner].content.str.cat(sep=" ")
+        text = df_slice.loc[df_slice["author"]
+                            == owner].content.str.cat(sep=" ")
     else:
-        text = df_slice.loc[df_slice["author"] != owner].content.str.cat(sep=" ")
+        text = df_slice.loc[df_slice["author"]
+                            != owner].content.str.cat(sep=" ")
     if len(text) > 0:
-            wordcloud = WordCloud(
-                width=1200,
-                height=600,
-                background_color="rgba(255, 255, 255, 0)",
-                mode="RGBA",
-                stopwords=stop_words).generate(text)
-            wcimg = wordcloud.to_image()
+        wordcloud = WordCloud(
+            width=1200,
+            height=600,
+            background_color="rgba(255, 255, 255, 0)",
+            mode="RGBA",
+            stopwords=stop_words).generate(text)
+        wcimg = wordcloud.to_image()
     return wcimg
+
+
+def generateStatistics():
+    endDateString = df["date"].max()
+    startDateString = df["date"].min()
+    startDate = datetime.fromisoformat(startDateString)
+    endDate = datetime.fromisoformat(endDateString)
+    startDateFormated = startDate.strftime("%A, the %d. %B %Y")
+    endDateFormated = endDate.strftime("%A, the %d. %B %Y")
+    numYourMsg = len(df.loc[df["author"] == owner])
+    numTheirMsg = len(df.loc[df["author"] != owner])
+    daysNum = abs(endDate - startDate).days
+    avgYourMsgPerDay = numYourMsg/daysNum
+    avgYourWordCount = df.loc[df["author"] == owner, "words"].mean()
+    avgYourCharCount = df.loc[df["author"] == owner, "chars"].mean()
+    avgTheirMsgPerDay = numTheirMsg/daysNum
+    avgTheirWordCount = df.loc[df["author"] != owner, "words"].mean()
+    avgTheirCharCount = df.loc[df["author"] != owner, "chars"].mean()
+
+    return """
+    # Statistics
+    We're analyzing your data from **{}**, to  **{}**, that is **{} days**.
+
+    In that time period **you sent {} messages** and **received {} messages**. That makes a total of {} messeges.
+
+    On average, **you've written {:.2f} messages per day**, and each of those consisted on average of {:.2f} words, or {:.2f} characters.
+
+    On the other hand, **you've received {:.2f} messages per day**, and each of those consisted on average of {:.2f} words, or {:.2f} characters.
     
 
-## PREPARING GLOBAL VARIABLES
+    """.format(startDateFormated,
+               endDateFormated,
+               daysNum,
+               numYourMsg,
+               numTheirMsg,
+               numTheirMsg+numYourMsg,
+               avgYourMsgPerDay,
+               avgYourWordCount,
+               avgYourCharCount,
+               avgTheirMsgPerDay,
+               avgTheirWordCount,
+               avgTheirCharCount)
+
+# PREPARING GLOBAL VARIABLES
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -108,17 +156,20 @@ messagefile = os.path.join(basedirectory, "messages.csv")
 df = pd.read_csv(messagefile)
 df["who"] = df["author"].apply(generateMessageOwner, args=(owner,))
 
-## LAYOUT TEMPLATES FOR EACH TAB
+# LAYOUT TEMPLATES FOR EACH TAB
 
 tab1_layout = html.Div([
     html.H2("Overview of your data"),
     dcc.Graph(
         id="default-histogram",
         figure=generalTimeHistogram()
-        ),
+    ),
     dcc.Graph(
         id="hour-histogram",
         figure=generalHourHistogram()
+    ),
+    dcc.Markdown(
+        generateStatistics()
     )
 ])
 
@@ -139,14 +190,14 @@ tab2_layout = html.Div([
 ])
 
 tab3_layout = html.Div([
-            html.H2("Data of a group conversation thread"),
-            html.P("Select a group:"),
-            dcc.Dropdown(id="person-dropdown",
-            options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()])
-        ])
+    html.H2("Data of a group conversation thread"),
+    html.P("Select a group:"),
+    dcc.Dropdown(id="person-dropdown",
+                 options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()])
+])
 
 
-## MAIN APP FUNCTIONALITY
+# MAIN APP FUNCTIONALITY
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -161,9 +212,11 @@ app.layout = html.Div([
     html.Div(id="content")
 ])
 
-## CALLBACKS
+# CALLBACKS
 
 # General tab selection callback
+
+
 @app.callback(Output("content", "children"), Input("tabs", "value"))
 def render_content(tab):
     if tab == "tab1":
@@ -185,26 +238,29 @@ def personTimeHistogram(person):
         personTimeHistogram.update_xaxes(title_text="Date")
 
         return dcc.Graph(
-                id="person-histogram",
-                figure=personTimeHistogram
-                )
-        
+            id="person-histogram",
+            figure=personTimeHistogram
+        )
+
+
 @app.callback(Output("person-hour-histogram-container", "children"), Input("person-dropdown", "value"))
 def personHourHistogram(person):
     if person:
         df_slice = df.loc[df["thread_name"] == person]
         personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[0, 23], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
-                                 "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
+            "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
         personHourHistogram.update_yaxes(title_text="Number of messages")
         personHourHistogram.update_xaxes(title_text="Hour of day", nticks=24)
         personHourHistogram.update_layout(bargap=0.1)
 
         return dcc.Graph(
-                id="person-hour-histogram",
-                figure=personHourHistogram
-            )
-        
-## this is a mess but we'll have to live with it for now
+            id="person-hour-histogram",
+            figure=personHourHistogram
+        )
+
+# this is a mess but we'll have to live with it for now
+
+
 @app.callback(Output("person-wordclouds-container", "children"), Input("person-dropdown", "value"))
 def personWordclouds(person):
     if person:
@@ -212,34 +268,33 @@ def personWordclouds(person):
         theirWordcloud = generateWordCloudImage(person, False)
 
         return html.Div(id="wordcloud-container",
-                                        children=html.Div(
-                                            children=[
-                                                html.Div(
-                                                    children=[
-                                                        html.H2(
-                                                            children=["Your wordcloud"]),
-                                                        html.Img(src=yourWordcloud, style={
-                                                            "display": "block", "width": "100%"})
-                                                    ],
-                                                    style={"display": "inline-block", "marginLeft": "auto",
-                                                        "marginRight": "auto", "width": "40%", "paddingRight": "3%"}
-                                                ),
-                                                html.Div(
-                                                    children=[
-                                                        html.H2(
-                                                            children=["Their wordcloud"]),
-                                                        html.Img(src=theirWordcloud, style={
-                                                            "display": "block", "width": "100%"})
-                                                    ],
-                                                    style={"display": "inline-block", "marginLeft": "auto",
-                                                        "marginRight": "auto", "width": "40%", "paddingLeft": "3%"}
-                                                )
+                        children=html.Div(
+                            children=[
+                                html.Div(
+                                    children=[
+                                        html.H2(
+                                            children=["Your wordcloud"]),
+                                        html.Img(src=yourWordcloud, style={
+                                            "display": "block", "width": "100%"})
+                                    ],
+                                    style={"display": "inline-block", "marginLeft": "auto",
+                                           "marginRight": "auto", "width": "40%", "paddingRight": "3%"}
+                                ),
+                                html.Div(
+                                    children=[
+                                        html.H2(
+                                            children=["Their wordcloud"]),
+                                        html.Img(src=theirWordcloud, style={
+                                            "display": "block", "width": "100%"})
+                                    ],
+                                    style={"display": "inline-block", "marginLeft": "auto",
+                                           "marginRight": "auto", "width": "40%", "paddingLeft": "3%"}
+                                )
 
-                                            ],
-                                            style={"textAlign": "center"}
-                                        )
-        )
-
+                            ],
+                            style={"textAlign": "center"}
+                        )
+                        )
 
 
 if __name__ == "__main__":
