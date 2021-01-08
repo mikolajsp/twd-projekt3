@@ -23,15 +23,21 @@ def generalTimeHistogram():
     timeHistogram = px.histogram(df, x="date", color="who", title="Your messages over time", labels={
         "date": "Date", "who": "Who sent the message"})
     timeHistogram.update_yaxes(title_text="Number of messages")
+    timeHistogram.update_layout(hovermode="x")
+    timeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
     return timeHistogram
 
 
 def generalHourHistogram():
-    hourHistogram = px.histogram(df, x="hour", color="who", range_x=[0, 23], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
-        "#264653", "#2a9d8f"], labels={"who": "Who sent the message"})
+    hourHistogram = px.histogram(df, x="hour", color="who", range_x=[-0.5, 23.5], nbins=24,
+                                 title="Breakdown of messages sent by hour",
+                                 color_discrete_sequence=["#264653", "#2a9d8f"],
+                                 labels={"who": "Who sent the message"})
     hourHistogram.update_yaxes(title_text="Number of messages")
-    hourHistogram.update_xaxes(title_text="Hour of day", nticks=24)
+    hourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
+    hourHistogram.update_layout(hovermode="x")
     hourHistogram.update_layout(bargap=0.1)
+    hourHistogram.update_traces(hovertemplate='Number of messages: %{y}')
     return hourHistogram
 
 
@@ -140,7 +146,7 @@ stop_words = [
 
 basedirectory = os.path.dirname(os.path.abspath(__file__))
 
-# getting the messages' owners' name
+# getting the messages 'owners' name
 ownernamepath = os.path.join(basedirectory, "owner.txt")
 with open(ownernamepath, mode="r", encoding="utf-8") as ownerfile:
     owner = ownerfile.read()
@@ -251,10 +257,10 @@ def personTimeHistogram(person):
 def personHourHistogram(person):
     if person:
         df_slice = df.loc[df["thread_name"] == person]
-        personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[0, 23], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
+        personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[-0.5, 23.5], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
             "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
         personHourHistogram.update_yaxes(title_text="Number of messages")
-        personHourHistogram.update_xaxes(title_text="Hour of day", nticks=24)
+        personHourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
         personHourHistogram.update_layout(bargap=0.1)
 
         return dcc.Graph(
