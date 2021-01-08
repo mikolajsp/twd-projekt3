@@ -56,7 +56,8 @@ def generateWordCloudImage(thread, isowner):
             height=600,
             background_color="rgba(255, 255, 255, 0)",
             mode="RGBA",
-            stopwords=stop_words).generate(text)
+            stopwords=stop_words,
+            collocations=False).generate(text)
         wcimg = wordcloud.to_image()
     return wcimg
 
