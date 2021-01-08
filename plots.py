@@ -247,9 +247,16 @@ def personTimeHistogram(person):
         personTimeHistogram = px.histogram(df_slice, x="date", color="author")
         personTimeHistogram.update_yaxes(title_text="Number of messages")
         personTimeHistogram.update_xaxes(title_text="Date")
+        # personTimeHistogram.update_xaxes(title_text="Date",
+        #                                  autorange=True,
+        #                                  range=["2014-10-29 18:36:37.3129", "2021-01-05 05:23:22.6871"],
+        #                                  rangeslider=dict(
+        #                                  autorange=True,
+        #                                  range=["2014-10-29 18:36:37.3129", "2021-01-05 05:23:22.6871"]
+        #                                  ),
+        #                                  type="date")
         personTimeHistogram.update_layout(hovermode="x")
         personTimeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
-
         return dcc.Graph(
             id="person-histogram",
             figure=personTimeHistogram
