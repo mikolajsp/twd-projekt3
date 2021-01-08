@@ -16,7 +16,7 @@ def generateMessageOwner(val, owner):
     if val == owner:
         return "You"
     else:
-        return "Someone else"
+        return "Other people"
 
 
 def generalTimeHistogram():
@@ -35,9 +35,9 @@ def generalHourHistogram():
                                  labels={"who": "Who sent the message"})
     hourHistogram.update_yaxes(title_text="Number of messages")
     hourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
-    hourHistogram.update_layout(hovermode="x")
-    hourHistogram.update_layout(bargap=0.1)
+    hourHistogram.update_layout(hovermode="x", bargap=0.1)
     hourHistogram.update_traces(hovertemplate='Number of messages: %{y}')
+
     return hourHistogram
 
 
@@ -184,7 +184,7 @@ tab2_layout = html.Div([
     html.P("Select a person:"),
     dcc.Dropdown(
         id="person-dropdown",
-        options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "Regular"].thread_name.unique()]),
+        options=[{"label": str(name), "value": str(name)} for name in df.loc[df["thread_type"] == "Regular"].thread_name.unique()]),
     html.Div(
         id="person-charts-container",
         children=[
@@ -246,6 +246,8 @@ def personTimeHistogram(person):
         personTimeHistogram = px.histogram(df_slice, x="date", color="author")
         personTimeHistogram.update_yaxes(title_text="Number of messages")
         personTimeHistogram.update_xaxes(title_text="Date")
+        personTimeHistogram.update_layout(hovermode="x")
+        personTimeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
 
         return dcc.Graph(
             id="person-histogram",
@@ -261,7 +263,8 @@ def personHourHistogram(person):
             "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
         personHourHistogram.update_yaxes(title_text="Number of messages")
         personHourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
-        personHourHistogram.update_layout(bargap=0.1)
+        personHourHistogram.update_layout(bargap=0.1, hovermode="x")
+        personHourHistogram.update_traces(hovertemplate='Number of messages: %{y}')
 
         return dcc.Graph(
             id="person-hour-histogram",
