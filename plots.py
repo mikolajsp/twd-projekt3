@@ -2,6 +2,7 @@ import dash
 import os
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import pandas as pd
@@ -31,10 +32,12 @@ def generalTimeHistogram():
 def generalHourHistogram():
     hourHistogram = px.histogram(df, x="hour", color="who", range_x=[-0.5, 23.5], nbins=24,
                                  title="Breakdown of messages sent by hour",
-                                 color_discrete_sequence=["#264653", "#2a9d8f"],
+                                 color_discrete_sequence=[
+                                     "#264653", "#2a9d8f"],
                                  labels={"who": "Who sent the message"})
     hourHistogram.update_yaxes(title_text="Number of messages")
-    hourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
+    hourHistogram.update_xaxes(
+        title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
     hourHistogram.update_layout(hovermode="x", bargap=0.1)
     hourHistogram.update_traces(hovertemplate='Number of messages: %{y}')
 
@@ -106,7 +109,8 @@ def generateStatistics():
 # PREPARING GLOBAL VARIABLES
 
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 # words not to include in the wordclouds sourced from
 # https://github.com/fergiemcdowall/stopword
@@ -183,9 +187,7 @@ tab1_layout = html.Div([
 tab2_layout = html.Div([
     html.H2("Data of a private conversation thread"),
     html.P("Select a person:"),
-    dcc.Dropdown(
-        id="person-dropdown",
-        options=[{"label": str(name), "value": str(name)} for name in df.loc[df["thread_type"] == "Regular"].thread_name.unique()]),
+
     html.Div(
         id="person-charts-container",
         children=[
@@ -198,9 +200,7 @@ tab2_layout = html.Div([
 
 tab3_layout = html.Div([
     html.H2("Data of a group conversation thread"),
-    html.P("Select a group:"),
-    dcc.Dropdown(id="group-dropdown",
-                 options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()]),
+
     html.Div(id="groups-output",
              children=[
                  html.Div(id="group-most-messages-container")
@@ -214,21 +214,43 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.config.suppress_callback_exceptions = True
 
-app.layout = html.Div([
-    dcc.Tabs(id="tabs", value="tab1", children=[
-        dcc.Tab(label="Your summary", value="tab1"),
-        dcc.Tab(label="People", value="tab2"),
-        dcc.Tab(label="Groups", value="tab3")
-    ]),
-    html.Div(id="content")
-])
+app.layout = dbc.Container([
+    dbc.Row([
+        dbc.Col(
+            dbc.Card(
+                dbc.CardBody(
+                    dbc.Tabs(id="tabs", active_tab="tab1", children=[
+                        dbc.Tab(label="Your summary", tab_id="tab1"),
+                        dbc.Tab(label="People", tab_id="tab2", children=[
+                            dcc.Dropdown(
+                                id="person-dropdown",
+                                options=[{"label": str(name), "value": str(name)} for name in df.loc[df["thread_type"] == "Regular"].thread_name.unique()])
+                        ]),
+                        dbc.Tab(label="Groups", tab_id="tab3", children=[
+                            html.P("Select a group:"),
+                            dcc.Dropdown(id="group-dropdown",
+                                         options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()])
+                        ])
+                    ])
+                )
+            ), md=3
+        ),
+        dbc.Col(
+            dbc.Card(
+                html.Div(id="content",  className="pt-4 px-4")
+            ), md=9, className="overflow-auto"
+        )
+    ])
+
+
+], fluid=True, className="pt-4")
 
 # CALLBACKS
 
 # General tab selection callback
 
 
-@app.callback(Output("content", "children"), Input("tabs", "value"))
+@app.callback(Output("content", "children"), Input("tabs", "active_tab"))
 def render_content(tab):
     if tab == "tab1":
         return tab1_layout
@@ -256,7 +278,8 @@ def personTimeHistogram(person):
         #                                  ),
         #                                  type="date")
         personTimeHistogram.update_layout(hovermode="x")
-        personTimeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
+        personTimeHistogram.update_traces(
+            hovertemplate='Number of messages: %{y}')
         return dcc.Graph(
             id="person-histogram",
             figure=personTimeHistogram
@@ -270,9 +293,11 @@ def personHourHistogram(person):
         personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[-0.5, 23.5], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
             "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
         personHourHistogram.update_yaxes(title_text="Number of messages")
-        personHourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
+        personHourHistogram.update_xaxes(
+            title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
         personHourHistogram.update_layout(bargap=0.1, hovermode="x")
-        personHourHistogram.update_traces(hovertemplate='Number of messages: %{y}')
+        personHourHistogram.update_traces(
+            hovertemplate='Number of messages: %{y}')
 
         return dcc.Graph(
             id="person-hour-histogram",
