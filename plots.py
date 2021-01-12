@@ -186,7 +186,7 @@ tab1_layout = html.Div([
 
 tab2_layout = html.Div([
     html.H2("Data of a private conversation thread"),
-    html.P("Select a person:"),
+
 
     html.Div(
         id="person-charts-container",
@@ -222,10 +222,11 @@ app.layout = dbc.Container([
                     dbc.Tabs(id="tabs", active_tab="tab1", children=[
                         dbc.Tab(label="Your summary", tab_id="tab1"),
                         dbc.Tab(label="People", tab_id="tab2", children=[
-                            dcc.Dropdown(
-                                id="person-dropdown",
-                                options=[{"label": str(name), "value": str(name)} for name in df.loc[df["thread_type"] == "Regular"].thread_name.unique()])
-                        ]),
+                                html.P("Select a person:"),
+                                dcc.Dropdown(
+                                    id="person-dropdown",
+                                    options=[{"label": str(name), "value": str(name)} for name in df.loc[df["thread_type"] == "Regular"].thread_name.unique()])
+                                ]),
                         dbc.Tab(label="Groups", tab_id="tab3", children=[
                             html.P("Select a group:"),
                             dcc.Dropdown(id="group-dropdown",
