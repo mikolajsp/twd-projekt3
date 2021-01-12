@@ -15,9 +15,9 @@ from datetime import datetime
 
 def generateMessageOwner(val, owner):
     if val == owner:
-        return "You"
+        return "Sent"
     else:
-        return "Other people"
+        return "Received"
 
 
 def generalTimeHistogram():
