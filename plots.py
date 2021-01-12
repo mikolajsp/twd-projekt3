@@ -22,7 +22,7 @@ def generateMessageOwner(val, owner):
 
 def generalTimeHistogram():
     timeHistogram = px.histogram(df, x="date", color="who", title="Your messages over time", labels={
-        "date": "Date", "who": "Who sent the message"})
+        "date": "Date", "who": "Number of messages:"})
     timeHistogram.update_yaxes(title_text="Number of messages")
     timeHistogram.update_layout(hovermode="x")
     timeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
@@ -34,7 +34,7 @@ def generalHourHistogram():
                                  title="Breakdown of messages sent by hour",
                                  color_discrete_sequence=[
                                      "#264653", "#2a9d8f"],
-                                 labels={"who": "Who sent the message"})
+                                 labels={"who": "Number of messages:"})
     hourHistogram.update_yaxes(title_text="Number of messages")
     hourHistogram.update_xaxes(
         title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
