@@ -4,7 +4,6 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
-import plotly.graph_objects as go
 import pandas as pd
 import plotly.express as px
 from wordcloud import WordCloud
@@ -34,12 +33,12 @@ def generalHourHistogram():
                                  title="Breakdown of messages sent by hour",
                                  color_discrete_sequence=[
                                      "#264653", "#2a9d8f"],
-                                 labels={"who": "Number of messages:"})
+                                 labels={"who": "Number of messages: "})
     hourHistogram.update_yaxes(title_text="Number of messages")
     hourHistogram.update_xaxes(
         title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
     hourHistogram.update_layout(hovermode="x", bargap=0.1)
-    hourHistogram.update_traces(hovertemplate='Number of messages: %{y}')
+    hourHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
 
     return hourHistogram
 
@@ -269,15 +268,15 @@ def personTimeHistogram(person):
 
         personTimeHistogram = px.histogram(df_slice, x="date", color="author")
         personTimeHistogram.update_yaxes(title_text="Number of messages")
-        personTimeHistogram.update_xaxes(title_text="Date")
-        # personTimeHistogram.update_xaxes(title_text="Date",
-        #                                  autorange=True,
-        #                                  range=["2014-10-29 18:36:37.3129", "2021-01-05 05:23:22.6871"],
-        #                                  rangeslider=dict(
-        #                                  autorange=True,
-        #                                  range=["2014-10-29 18:36:37.3129", "2021-01-05 05:23:22.6871"]
-        #                                  ),
-        #                                  type="date")
+        #personTimeHistogram.update_xaxes(title_text="Date")
+        personTimeHistogram.update_xaxes(title_text="Date",
+                                         autorange=True,
+                                         range=["2014-10-29", "2021-01-05"],
+                                         rangeslider=dict(
+                                         autorange=True,
+                                         range=["2014-10-29", "2021-01-05"]
+                                         ),
+                                         type="date")
         personTimeHistogram.update_layout(hovermode="x")
         personTimeHistogram.update_traces(
             hovertemplate='Number of messages: %{y}')

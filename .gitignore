@@ -9,3 +9,4 @@ script.R
 owner.txt
 .venv/
 reactions.csv
+venv/
