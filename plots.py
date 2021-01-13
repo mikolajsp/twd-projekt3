@@ -24,7 +24,7 @@ def generalTimeHistogram():
         "date": "Date", "who": "Number of messages:"})
     timeHistogram.update_yaxes(title_text="Number of messages")
     timeHistogram.update_layout(hovermode="x")
-    timeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
+    timeHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
     return timeHistogram
 
 
@@ -85,7 +85,7 @@ def generateStatistics():
     # Statistics
     We're analyzing your data from **{}**, to  **{}**, that is **{} days**.
 
-    In that time period **you sent {} messages** and **received {} messages**. That makes a total of {} messeges.
+    In that time period **you sent {} messages** and **received {} messages**. That makes a total of {} messages.
 
     On average, **you've written {:.2f} messages per day**, and each of those consisted on average of {:.2f} words, or {:.2f} characters.
 
@@ -172,11 +172,17 @@ tab1_layout = html.Div([
     html.H2("Overview of your data"),
     dcc.Graph(
         id="default-histogram",
-        figure=generalTimeHistogram()
+        figure=generalTimeHistogram(),
+        config=dict(
+            displayModeBar=False
+        )
     ),
     dcc.Graph(
         id="hour-histogram",
-        figure=generalHourHistogram()
+        figure=generalHourHistogram(),
+        config=dict(
+            displayModeBar=False
+        )
     ),
     dcc.Markdown(
         generateStatistics()
@@ -279,10 +285,13 @@ def personTimeHistogram(person):
                                          type="date")
         personTimeHistogram.update_layout(hovermode="x")
         personTimeHistogram.update_traces(
-            hovertemplate='Number of messages: %{y}')
+            hovertemplate='Number of messages: %{y:f}')
         return dcc.Graph(
             id="person-histogram",
-            figure=personTimeHistogram
+            figure=personTimeHistogram,
+            config=dict(
+                displayModeBar=False
+            )
         )
 
 
@@ -297,11 +306,14 @@ def personHourHistogram(person):
             title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
         personHourHistogram.update_layout(bargap=0.1, hovermode="x")
         personHourHistogram.update_traces(
-            hovertemplate='Number of messages: %{y}')
+            hovertemplate='Number of messages: %{y:f}')
 
         return dcc.Graph(
             id="person-hour-histogram",
-            figure=personHourHistogram
+            figure=personHourHistogram,
+            config=dict(
+                displayModeBar=False
+            )
         )
 
 # this is a mess but we'll have to live with it for now
@@ -360,7 +372,10 @@ def groupMostMessages(thread):
         mostMessagesHistogram.update_yaxes(categoryorder="total ascending")
 
         return dcc.Graph(id="mostMessages",
-                         figure=mostMessagesHistogram
+                         figure=mostMessagesHistogram,
+                         config=dict(
+                             displayModeBar=False
+                         )
                          )
 
 
