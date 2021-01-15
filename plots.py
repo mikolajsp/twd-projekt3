@@ -10,6 +10,8 @@ from wordcloud import WordCloud
 from datetime import datetime
 import time
 from dateutil.relativedelta import relativedelta
+
+
 # HELPER FUNCTIONS
 
 
@@ -17,9 +19,11 @@ def unixTimeMillis(dt):
     ''' Convert datetime to unix timestamp '''
     return int(time.mktime(dt.timetuple()))
 
+
 def unixToDatetime(unix):
     ''' Convert unix timestamp to datetime. '''
-    return pd.to_datetime(unix,unit='s')
+    return pd.to_datetime(unix, unit='s')
+
 
 def getMarks(start, end, Nth=100):
     ''' Returns the marks for labeling.
@@ -36,7 +40,6 @@ def getMarks(start, end, Nth=100):
     return {unixTimeMillis(m): (str(m.strftime('%Y-%m'))) for m in result}
 
 
-
 def generateMessageOwner(val, owner):
     if val == owner:
         return "Sent"
@@ -47,9 +50,10 @@ def generateMessageOwner(val, owner):
 def generalTimeHistogram():
     timeHistogram = px.histogram(df, x="date", color="who", title="Your messages over time", labels={
         "date": "Date", "who": "Number of messages:"})
-    timeHistogram.update_yaxes(title_text="Number of messages")
+    timeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
+    timeHistogram.update_xaxes(fixedrange=True)
     timeHistogram.update_layout(hovermode="x")
-    timeHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
+    timeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
     return timeHistogram
 
 
@@ -88,6 +92,7 @@ def generateWordCloudImage(thread, isowner):
         wcimg = wordcloud.to_image()
     return wcimg
 
+
 def generatePersonWordCloudImage(thread, isowner, range):
     wcimg = None
     df_slice = df.loc[df["thread_name"] == thread]
@@ -125,10 +130,10 @@ def generateStatistics():
     numYourMsg = len(df.loc[df["author"] == owner])
     numTheirMsg = len(df.loc[df["author"] != owner])
     daysNum = abs(endDate - startDate).days
-    avgYourMsgPerDay = numYourMsg/daysNum
+    avgYourMsgPerDay = numYourMsg / daysNum
     avgYourWordCount = df.loc[df["author"] == owner, "words"].mean()
     avgYourCharCount = df.loc[df["author"] == owner, "chars"].mean()
-    avgTheirMsgPerDay = numTheirMsg/daysNum
+    avgTheirMsgPerDay = numTheirMsg / daysNum
     avgTheirWordCount = df.loc[df["author"] != owner, "words"].mean()
     avgTheirCharCount = df.loc[df["author"] != owner, "chars"].mean()
 
@@ -136,25 +141,26 @@ def generateStatistics():
     # Statistics
     We're analyzing your data from **{}**, to  **{}**, that is **{} days**.
 
-    In that time period **you sent {} messages** and **received {} messages**. That makes a total of {} messages.
+    In that time period **you sent {} messages** and **received {} messages**. That makes a total of {} messeges.
 
     On average, **you've written {:.2f} messages per day**, and each of those consisted on average of {:.2f} words, or {:.2f} characters.
 
     On the other hand, **you've received {:.2f} messages per day**, and each of those consisted on average of {:.2f} words, or {:.2f} characters.
-    
+
 
     """.format(startDateFormated,
                endDateFormated,
                daysNum,
                numYourMsg,
                numTheirMsg,
-               numTheirMsg+numYourMsg,
+               numTheirMsg + numYourMsg,
                avgYourMsgPerDay,
                avgYourWordCount,
                avgYourCharCount,
                avgTheirMsgPerDay,
                avgTheirWordCount,
                avgTheirCharCount)
+
 
 # PREPARING GLOBAL VARIABLES
 
@@ -246,14 +252,14 @@ tab2_layout = html.Div([
     html.Div(
         id="person-charts-container",
         children=[
-                dcc.RangeSlider(
+            dcc.RangeSlider(
                 id='year_slider',
-                min = unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
-                max = unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
-                value = [unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
-                         unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
+                min=unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                max=unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
+                value=[unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                       unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
                 marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
-                            pd.to_datetime(df['date'].tolist()).max())
+                               pd.to_datetime(df['date'].tolist()).max())
             ),
             html.Div(id='slider-period'),
             html.Div(id="person-time-histogram-container"),
@@ -272,7 +278,6 @@ tab3_layout = html.Div([
              ])
 ])
 
-
 # MAIN APP FUNCTIONALITY
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -287,15 +292,17 @@ app.layout = dbc.Container([
                     dbc.Tabs(id="tabs", active_tab="tab1", children=[
                         dbc.Tab(label="Your summary", tab_id="tab1"),
                         dbc.Tab(label="People", tab_id="tab2", children=[
-                                html.P("Select a person:"),
-                                dcc.Dropdown(
-                                    id="person-dropdown",
-                                    options=[{"label": str(name), "value": str(name)} for name in df.loc[df["thread_type"] == "Regular"].thread_name.unique()])
-                                ]),
+                            html.P("Select a person:"),
+                            dcc.Dropdown(
+                                id="person-dropdown",
+                                options=[{"label": str(name), "value": str(name)} for name in
+                                         df.loc[df["thread_type"] == "Regular"].thread_name.unique()])
+                        ]),
                         dbc.Tab(label="Groups", tab_id="tab3", children=[
                             html.P("Select a group:"),
                             dcc.Dropdown(id="group-dropdown",
-                                         options=[{"label": name, "value": name} for name in df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()])
+                                         options=[{"label": name, "value": name} for name in
+                                                  df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()])
                         ])
                     ])
                 )
@@ -303,13 +310,13 @@ app.layout = dbc.Container([
         ),
         dbc.Col(
             dbc.Card(
-                html.Div(id="content",  className="pt-4 px-4")
+                html.Div(id="content", className="pt-4 px-4")
             ), md=9, className="overflow-auto"
         )
     ])
 
-
 ], fluid=True, className="pt-4")
+
 
 # CALLBACKS
 
@@ -337,6 +344,7 @@ def showPeriod(range):
     end_label = str(end1.strftime('%Y-%m'))
     return f'Period from {start_label} to {end_label}'
 
+
 @app.callback(Output("person-time-histogram-container", "children"),
               Input("person-dropdown", "value"),
               Input("year_slider", "value"))
@@ -352,11 +360,11 @@ def personTimeHistogram(person, range):
             return html.Div(children='No messages in this period', style={'textAlign': 'center'})
 
         personTimeHistogram = px.histogram(df_slice, x="date", color="author")
-        personTimeHistogram.update_yaxes(title_text="Number of messages")
-        personTimeHistogram.update_xaxes(title_text="Date")
+        personTimeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
+        personTimeHistogram.update_xaxes(title_text="Date", fixedrange=True)
         personTimeHistogram.update_layout(hovermode="x")
         personTimeHistogram.update_traces(
-            hovertemplate='Number of messages: %{y:f}')
+            hovertemplate='Number of messages: %{y}')
         return dcc.Graph(
             id="person-histogram",
             figure=personTimeHistogram,
@@ -379,14 +387,15 @@ def personHourHistogram(person, range):
         df_slice = df_slice.loc[mask]
         if df_slice.size == 0:
             return html.Div(children='No messages in this period', style={'textAlign': 'center'})
-        personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[-0.5, 23.5], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
-            "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
-        personHourHistogram.update_yaxes(title_text="Number of messages")
+        personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[-0.5, 23.5], nbins=24,
+                                           title="Breakdown of messages sent by hour", color_discrete_sequence=[
+                "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
+        personHourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personHourHistogram.update_xaxes(
-            title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
+            title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0, fixedrange=True)
         personHourHistogram.update_layout(bargap=0.1, hovermode="x")
         personHourHistogram.update_traces(
-            hovertemplate='Number of messages: %{y:f}')
+            hovertemplate='Number of messages: %{y}')
 
         return dcc.Graph(
             id="person-hour-histogram",
@@ -396,6 +405,7 @@ def personHourHistogram(person, range):
             )
         )
 
+
 # this is a mess but we'll have to live with it for now
 
 
@@ -404,7 +414,6 @@ def personHourHistogram(person, range):
               Input("year_slider", "value"))
 def personWordclouds(person, range):
     if person:
-
         yourWordcloud = generatePersonWordCloudImage(person, True, range)
         theirWordcloud = generatePersonWordCloudImage(person, False, range)
 
@@ -455,10 +464,7 @@ def groupMostMessages(thread):
         mostMessagesHistogram.update_yaxes(categoryorder="total ascending")
 
         return dcc.Graph(id="mostMessages",
-                         figure=mostMessagesHistogram,
-                         config=dict(
-                             displayModeBar=False
-                         )
+                         figure=mostMessagesHistogram
                          )
 
 
