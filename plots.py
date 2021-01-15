@@ -47,29 +47,7 @@ def generateMessageOwner(val, owner):
         return "Received"
 
 
-def generalTimeHistogram():
-    timeHistogram = px.histogram(df, x="date", color="who", title="Your messages over time", labels={
-        "date": "Date", "who": "Number of messages:"})
-    timeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
-    timeHistogram.update_xaxes(fixedrange=True)
-    timeHistogram.update_layout(hovermode="x")
-    timeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
-    return timeHistogram
 
-
-def generalHourHistogram():
-    hourHistogram = px.histogram(df, x="hour", color="who", range_x=[-0.5, 23.5], nbins=24,
-                                 title="Breakdown of messages sent by hour",
-                                 color_discrete_sequence=[
-                                     "#264653", "#2a9d8f"],
-                                 labels={"who": "Number of messages: "})
-    hourHistogram.update_yaxes(title_text="Number of messages")
-    hourHistogram.update_xaxes(
-        title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
-    hourHistogram.update_layout(hovermode="x", bargap=0.1)
-    hourHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
-
-    return hourHistogram
 
 
 def generateWordCloudImage(thread, isowner):
@@ -120,46 +98,7 @@ def generatePersonWordCloudImage(thread, isowner, range):
     return wcimg
 
 
-def generateStatistics():
-    endDateString = df["date"].max()
-    startDateString = df["date"].min()
-    startDate = datetime.fromisoformat(startDateString)
-    endDate = datetime.fromisoformat(endDateString)
-    startDateFormated = startDate.strftime("%A, the %d. %B %Y")
-    endDateFormated = endDate.strftime("%A, the %d. %B %Y")
-    numYourMsg = len(df.loc[df["author"] == owner])
-    numTheirMsg = len(df.loc[df["author"] != owner])
-    daysNum = abs(endDate - startDate).days
-    avgYourMsgPerDay = numYourMsg / daysNum
-    avgYourWordCount = df.loc[df["author"] == owner, "words"].mean()
-    avgYourCharCount = df.loc[df["author"] == owner, "chars"].mean()
-    avgTheirMsgPerDay = numTheirMsg / daysNum
-    avgTheirWordCount = df.loc[df["author"] != owner, "words"].mean()
-    avgTheirCharCount = df.loc[df["author"] != owner, "chars"].mean()
 
-    return """
-    # Statistics
-    We're analyzing your data from **{}**, to  **{}**, that is **{} days**.
-
-    In that time period **you sent {} messages** and **received {} messages**. That makes a total of {} messeges.
-
-    On average, **you've written {:.2f} messages per day**, and each of those consisted on average of {:.2f} words, or {:.2f} characters.
-
-    On the other hand, **you've received {:.2f} messages per day**, and each of those consisted on average of {:.2f} words, or {:.2f} characters.
-
-
-    """.format(startDateFormated,
-               endDateFormated,
-               daysNum,
-               numYourMsg,
-               numTheirMsg,
-               numTheirMsg + numYourMsg,
-               avgYourMsgPerDay,
-               avgYourWordCount,
-               avgYourCharCount,
-               avgTheirMsgPerDay,
-               avgTheirWordCount,
-               avgTheirCharCount)
 
 
 # PREPARING GLOBAL VARIABLES
@@ -228,23 +167,19 @@ df['dateformat'] = pd.to_datetime(df['date'])
 
 tab1_layout = html.Div([
     html.H2("Overview of your data"),
-    dcc.Graph(
-        id="default-histogram",
-        figure=generalTimeHistogram(),
-        config=dict(
-            displayModeBar=False
-        )
+    dcc.RangeSlider(
+                id='year_slider1',
+                min=unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                max=unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
+                value=[unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                       unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
+                marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
+                               pd.to_datetime(df['date'].tolist()).max())
     ),
-    dcc.Graph(
-        id="hour-histogram",
-        figure=generalHourHistogram(),
-        config=dict(
-            displayModeBar=False
-        )
-    ),
-    dcc.Markdown(
-        generateStatistics()
-    )
+    html.Div(id='slider-period1'),
+    html.Div(id="time-histogram-container"),
+    html.Div(id="hour-histogram-container"),
+    dcc.Markdown(id ="statistic")
 ])
 
 tab2_layout = html.Div([
@@ -253,7 +188,7 @@ tab2_layout = html.Div([
         id="person-charts-container",
         children=[
             dcc.RangeSlider(
-                id='year_slider',
+                id='year_slider2',
                 min=unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
                 max=unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
                 value=[unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
@@ -261,7 +196,7 @@ tab2_layout = html.Div([
                 marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
                                pd.to_datetime(df['date'].tolist()).max())
             ),
-            html.Div(id='slider-period'),
+            html.Div(id='slider-period2'),
             html.Div(id="person-time-histogram-container"),
             html.Div(id="person-hour-histogram-container"),
             html.Div(id="person-wordclouds-container")
@@ -271,7 +206,16 @@ tab2_layout = html.Div([
 
 tab3_layout = html.Div([
     html.H2("Data of reactions in your threads"),
-
+    dcc.RangeSlider(
+                id='year_slider3',
+                min=unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                max=unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
+                value=[unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                       unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
+                marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
+                               pd.to_datetime(df['date'].tolist()).max())
+    ),
+    html.Div(id='slider-period3'),
     html.Div(id="reactions-output",
              children=[
                  html.Div(id="reactions-container")
@@ -334,9 +278,7 @@ def render_content(tab):
         return tab3_layout
 
 
-# Second tab callbacks
-@app.callback(Output("slider-period", "children"),
-              Input("year_slider", "value"))
+
 def showPeriod(range):
     start1 = datetime.fromtimestamp(range[0])
     end1 = datetime.fromtimestamp(range[1])
@@ -346,9 +288,133 @@ def showPeriod(range):
     return f'Period from {start_label} to {end_label}'
 
 
+# Second tab callbacks
+@app.callback(Output("slider-period1", "children"),
+              Input("year_slider1", "value"),)
+def showPeriod1(range):
+    return showPeriod(range)
+
+
+@app.callback(Output("slider-period2", "children"),
+              Input("year_slider2", "value"),)
+def showPeriod2(range):
+    return showPeriod(range)
+
+@app.callback(Output("slider-period3", "children"),
+              Input("year_slider3", "value"),)
+def showPeriod2(range):
+    return showPeriod(range)
+
+@app.callback(Output("time-histogram-container", "children"),
+              Input("year_slider1", "value"),)
+def generalTimeHistogram(range):
+    start = datetime.fromtimestamp(range[0])
+    end = datetime.fromtimestamp(range[1])
+    date_list = pd.to_datetime(df['date'].tolist())
+    mask = (date_list >= start) & (date_list <= end)
+    df_slice = df.loc[mask]
+    if df_slice.size == 0:
+        return html.Div(children='No messages in this period', style={'textAlign': 'center'})
+    timeHistogram = px.histogram(df_slice, x="date", color="who", title="Your messages over time", labels={
+        "date": "Date", "who": "Number of messages:"})
+    timeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
+    timeHistogram.update_xaxes(fixedrange=True)
+    timeHistogram.update_layout(hovermode="x")
+    timeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
+    return dcc.Graph(
+        id="default-histogram",
+        figure=timeHistogram,
+        config=dict(
+            displayModeBar=False
+        )
+    ),
+
+@app.callback(Output("hour-histogram-container", "children"),
+              Input("year_slider1", "value"),)
+def generalHourHistogram(range):
+    start = datetime.fromtimestamp(range[0])
+    end = datetime.fromtimestamp(range[1])
+    date_list = pd.to_datetime(df['date'].tolist())
+    mask = (date_list >= start) & (date_list <= end)
+    df_slice = df.loc[mask]
+    if df_slice.size == 0:
+        return html.Div(children='No messages in this period', style={'textAlign': 'center'})
+
+    hourHistogram = px.histogram(df_slice, x="hour", color="who", range_x=[-0.5, 23.5], nbins=24,
+                                 title="Breakdown of messages sent by hour",
+                                 color_discrete_sequence=[
+                                     "#264653", "#2a9d8f"],
+                                 labels={"who": "Number of messages: "})
+    hourHistogram.update_yaxes(title_text="Number of messages")
+    hourHistogram.update_xaxes(
+        title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
+    hourHistogram.update_layout(hovermode="x", bargap=0.1)
+    hourHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
+
+    return dcc.Graph(
+        id="hour-histogram",
+        figure=hourHistogram,
+        config=dict(
+            displayModeBar=False
+        )
+    )
+@app.callback(Output("statistic", "children"),
+              Input("year_slider1", "value"),)
+def generateStatistics(range):
+    start = datetime.fromtimestamp(range[0])
+    end = datetime.fromtimestamp(range[1])
+    date_list = pd.to_datetime(df['date'].tolist())
+    mask = (date_list >= start) & (date_list <= end)
+    df_slice = df.loc[mask]
+    if df_slice.size == 0:
+        return html.Div(children='No messages in this period', style={'textAlign': 'center'})
+
+    endDateString = df_slice["date"].max()
+    startDateString = df_slice["date"].min()
+    startDate = datetime.fromisoformat(startDateString)
+    endDate = datetime.fromisoformat(endDateString)
+    startDateFormated = startDate.strftime("%A, the %d. %B %Y")
+    endDateFormated = endDate.strftime("%A, the %d. %B %Y")
+    numYourMsg = len(df_slice.loc[df_slice["author"] == owner])
+    numTheirMsg = len(df_slice.loc[df_slice["author"] != owner])
+    daysNum = abs(endDate - startDate).days
+    avgYourMsgPerDay = numYourMsg / daysNum
+    avgYourWordCount = df_slice.loc[df_slice["author"] == owner, "words"].mean()
+    avgYourCharCount = df_slice.loc[df_slice["author"] == owner, "chars"].mean()
+    avgTheirMsgPerDay = numTheirMsg / daysNum
+    avgTheirWordCount = df_slice.loc[df_slice["author"] != owner, "words"].mean()
+    avgTheirCharCount = df_slice.loc[df_slice["author"] != owner, "chars"].mean()
+
+    return """
+    # Statistics
+    We're analyzing your data from **{}**, to  **{}**, that is **{} days**.
+
+    In that time period **you sent {} messages** and **received {} messages**. That makes a total of {} messeges.
+
+    On average, **you've written {:.2f} messages per day**, and each of those consisted on average of {:.2f} words, or {:.2f} characters.
+
+    On the other hand, **you've received {:.2f} messages per day**, and each of those consisted on average of {:.2f} words, or {:.2f} characters.
+
+
+    """.format(startDateFormated,
+               endDateFormated,
+               daysNum,
+               numYourMsg,
+               numTheirMsg,
+               numTheirMsg + numYourMsg,
+               avgYourMsgPerDay,
+               avgYourWordCount,
+               avgYourCharCount,
+               avgTheirMsgPerDay,
+               avgTheirWordCount,
+               avgTheirCharCount)
+
+
+
+
 @app.callback(Output("person-time-histogram-container", "children"),
               Input("person-dropdown", "value"),
-              Input("year_slider", "value"))
+              Input("year_slider2", "value"))
 def personTimeHistogram(person, range):
     if person:
         df_slice = df.loc[df["thread_name"] == person]
@@ -377,7 +443,7 @@ def personTimeHistogram(person, range):
 
 @app.callback(Output("person-hour-histogram-container", "children"),
               Input("person-dropdown", "value"),
-              Input("year_slider", "value"))
+              Input("year_slider2", "value"))
 def personHourHistogram(person, range):
     if person:
         df_slice = df.loc[df["thread_name"] == person]
@@ -412,7 +478,7 @@ def personHourHistogram(person, range):
 
 @app.callback(Output("person-wordclouds-container", "children"),
               Input("person-dropdown", "value"),
-              Input("year_slider", "value"))
+              Input("year_slider2", "value"))
 def personWordclouds(person, range):
     if person:
         yourWordcloud = generatePersonWordCloudImage(person, True, range)
@@ -450,10 +516,21 @@ def personWordclouds(person, range):
 
 # third tab callbacks
 
-@app.callback(Output("reactions-container", "children"), Input("reactions-dropdown", "value"))
-def chatReactions(person):
+@app.callback(Output("reactions-container", "children"),
+              Input("reactions-dropdown", "value"),
+              Input("year_slider3", "value"))
+def chatReactions(person, range):
     if person:
         df_sl = df_reactions.loc[df_reactions["thread_name"] == person]
+
+        start = datetime.fromtimestamp(range[0])
+        end = datetime.fromtimestamp(range[1])
+        date_list = pd.to_datetime(df_sl['date'].tolist())
+        mask = (date_list >= start) & (date_list <= end)
+        df_sl = df_sl.loc[mask]
+        if df_sl.size == 0:
+            return html.Div(children='No messages in this period', style={'textAlign': 'center'})
+
         top = df_sl.groupby(["emoji", "reacting_person"]).size()
         top = top.reset_index(level=['emoji', 'reacting_person']).rename(columns={0: "count"})
         top = top.loc[top["count"] > 2]
