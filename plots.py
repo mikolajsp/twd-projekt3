@@ -8,8 +8,33 @@ import pandas as pd
 import plotly.express as px
 from wordcloud import WordCloud
 from datetime import datetime
-
+import time
+from dateutil.relativedelta import relativedelta
 # HELPER FUNCTIONS
+
+
+def unixTimeMillis(dt):
+    ''' Convert datetime to unix timestamp '''
+    return int(time.mktime(dt.timetuple()))
+
+def unixToDatetime(unix):
+    ''' Convert unix timestamp to datetime. '''
+    return pd.to_datetime(unix,unit='s')
+
+def getMarks(start, end, Nth=100):
+    ''' Returns the marks for labeling.
+        Every Nth value will be used.
+    '''
+
+    result = []
+    current = start
+    while current <= end:
+        result.append(current)
+        current += relativedelta(months=6)
+    result.pop()
+    result.append(end)
+    return {unixTimeMillis(m): (str(m.strftime('%Y-%m'))) for m in result}
+
 
 
 def generateMessageOwner(val, owner):
@@ -46,6 +71,32 @@ def generalHourHistogram():
 def generateWordCloudImage(thread, isowner):
     wcimg = None
     df_slice = df.loc[df["thread_name"] == thread]
+    if isowner:
+        text = df_slice.loc[df_slice["author"]
+                            == owner].content.str.cat(sep=" ")
+    else:
+        text = df_slice.loc[df_slice["author"]
+                            != owner].content.str.cat(sep=" ")
+    if len(text) > 0:
+        wordcloud = WordCloud(
+            width=1200,
+            height=600,
+            background_color="rgba(255, 255, 255, 0)",
+            mode="RGBA",
+            stopwords=stop_words,
+            collocations=False).generate(text)
+        wcimg = wordcloud.to_image()
+    return wcimg
+
+def generatePersonWordCloudImage(thread, isowner, range):
+    wcimg = None
+    df_slice = df.loc[df["thread_name"] == thread]
+    start = datetime.fromtimestamp(range[0])
+    end = datetime.fromtimestamp(range[1])
+
+    date_list = pd.to_datetime(df_slice['date'].tolist())
+    mask = (date_list >= start) & (date_list <= end)
+    df_slice = df_slice.loc[mask]
     if isowner:
         text = df_slice.loc[df_slice["author"]
                             == owner].content.str.cat(sep=" ")
@@ -165,6 +216,7 @@ df_reactions["who"] = df_reactions["reacting_person"].apply(
 messagefile = os.path.join(basedirectory, "messages.csv")
 df = pd.read_csv(messagefile)
 df["who"] = df["author"].apply(generateMessageOwner, args=(owner,))
+df['dateformat'] = pd.to_datetime(df['date'])
 
 # LAYOUT TEMPLATES FOR EACH TAB
 
@@ -191,11 +243,19 @@ tab1_layout = html.Div([
 
 tab2_layout = html.Div([
     html.H2("Data of a private conversation thread"),
-
-
     html.Div(
         id="person-charts-container",
         children=[
+                dcc.RangeSlider(
+                id='year_slider',
+                min = unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                max = unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
+                value = [unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                         unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
+                marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
+                            pd.to_datetime(df['date'].tolist()).max())
+            ),
+            html.Div(id='slider-period'),
             html.Div(id="person-time-histogram-container"),
             html.Div(id="person-hour-histogram-container"),
             html.Div(id="person-wordclouds-container")
@@ -267,22 +327,33 @@ def render_content(tab):
 
 
 # Second tab callbacks
-@app.callback(Output("person-time-histogram-container", "children"), Input("person-dropdown", "value"))
-def personTimeHistogram(person):
+@app.callback(Output("slider-period", "children"),
+              Input("year_slider", "value"))
+def showPeriod(range):
+    start1 = datetime.fromtimestamp(range[0])
+    end1 = datetime.fromtimestamp(range[1])
+    # labels = {unixTimeMillis(m): (str(m.strftime('%Y-%m'))) for m in result}
+    start_label = str(start1.strftime('%Y-%m'))
+    end_label = str(end1.strftime('%Y-%m'))
+    return f'Period from {start_label} to {end_label}'
+
+@app.callback(Output("person-time-histogram-container", "children"),
+              Input("person-dropdown", "value"),
+              Input("year_slider", "value"))
+def personTimeHistogram(person, range):
     if person:
         df_slice = df.loc[df["thread_name"] == person]
+        start = datetime.fromtimestamp(range[0])
+        end = datetime.fromtimestamp(range[1])
+        date_list = pd.to_datetime(df_slice['date'].tolist())
+        mask = (date_list >= start) & (date_list <= end)
+        df_slice = df_slice.loc[mask]
+        if df_slice.size == 0:
+            return html.Div(children='No messages in this period', style={'textAlign': 'center'})
 
         personTimeHistogram = px.histogram(df_slice, x="date", color="author")
         personTimeHistogram.update_yaxes(title_text="Number of messages")
-        #personTimeHistogram.update_xaxes(title_text="Date")
-        personTimeHistogram.update_xaxes(title_text="Date",
-                                         autorange=True,
-                                         range=["2014-10-29", "2021-01-05"],
-                                         rangeslider=dict(
-                                         autorange=True,
-                                         range=["2014-10-29", "2021-01-05"]
-                                         ),
-                                         type="date")
+        personTimeHistogram.update_xaxes(title_text="Date")
         personTimeHistogram.update_layout(hovermode="x")
         personTimeHistogram.update_traces(
             hovertemplate='Number of messages: %{y:f}')
@@ -295,10 +366,19 @@ def personTimeHistogram(person):
         )
 
 
-@app.callback(Output("person-hour-histogram-container", "children"), Input("person-dropdown", "value"))
-def personHourHistogram(person):
+@app.callback(Output("person-hour-histogram-container", "children"),
+              Input("person-dropdown", "value"),
+              Input("year_slider", "value"))
+def personHourHistogram(person, range):
     if person:
         df_slice = df.loc[df["thread_name"] == person]
+        start = datetime.fromtimestamp(range[0])
+        end = datetime.fromtimestamp(range[1])
+        date_list = pd.to_datetime(df_slice['date'].tolist())
+        mask = (date_list >= start) & (date_list <= end)
+        df_slice = df_slice.loc[mask]
+        if df_slice.size == 0:
+            return html.Div(children='No messages in this period', style={'textAlign': 'center'})
         personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[-0.5, 23.5], nbins=24, title="Breakdown of messages sent by hour", color_discrete_sequence=[
             "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
         personHourHistogram.update_yaxes(title_text="Number of messages")
@@ -319,11 +399,14 @@ def personHourHistogram(person):
 # this is a mess but we'll have to live with it for now
 
 
-@app.callback(Output("person-wordclouds-container", "children"), Input("person-dropdown", "value"))
-def personWordclouds(person):
+@app.callback(Output("person-wordclouds-container", "children"),
+              Input("person-dropdown", "value"),
+              Input("year_slider", "value"))
+def personWordclouds(person, range):
     if person:
-        yourWordcloud = generateWordCloudImage(person, True)
-        theirWordcloud = generateWordCloudImage(person, False)
+
+        yourWordcloud = generatePersonWordCloudImage(person, True, range)
+        theirWordcloud = generatePersonWordCloudImage(person, False, range)
 
         return html.Div(id="wordcloud-container",
                         children=html.Div(
