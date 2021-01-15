@@ -270,11 +270,11 @@ tab2_layout = html.Div([
 ])
 
 tab3_layout = html.Div([
-    html.H2("Data of a group conversation thread"),
+    html.H2("Data of reactions in your threads"),
 
-    html.Div(id="groups-output",
+    html.Div(id="reactions-output",
              children=[
-                 html.Div(id="group-most-messages-container")
+                 html.Div(id="reactions-container")
              ])
 ])
 
@@ -298,11 +298,12 @@ app.layout = dbc.Container([
                                 options=[{"label": str(name), "value": str(name)} for name in
                                          df.loc[df["thread_type"] == "Regular"].thread_name.unique()])
                         ]),
-                        dbc.Tab(label="Groups", tab_id="tab3", children=[
-                            html.P("Select a group:"),
-                            dcc.Dropdown(id="group-dropdown",
-                                         options=[{"label": name, "value": name} for name in
-                                                  df.loc[df["thread_type"] == "RegularGroup"].thread_name.unique()])
+                        dbc.Tab(label="Reactions", tab_id="tab3", children=[
+                            html.P("Select a person:"),
+                            dcc.Dropdown(
+                                id="reactions-dropdown",
+                                options=[{"label": str(name), "value": str(name)} for name in
+                                         df.loc[df["thread_type"] == "Regular"].thread_name.unique()])
                         ])
                     ])
                 )
@@ -449,22 +450,22 @@ def personWordclouds(person, range):
 
 # third tab callbacks
 
-@app.callback(Output("group-most-messages-container", "children"), Input("group-dropdown", "value"))
-def groupMostMessages(thread):
-    if thread:
-        df_sl = df.loc[df["thread_name"] == thread]
-        top = df_sl.groupby(["author"]).size(
-        ).sort_values(ascending=False).head(10)
-        neww = pd.DataFrame()
-        neww["count"] = top
-        neww["author"] = top.index
-
-        mostMessagesHistogram = px.bar(
-            y=neww["author"], x=neww["count"], orientation="h")
+@app.callback(Output("reactions-container", "children"), Input("reactions-dropdown", "value"))
+def chatReactions(person):
+    if person:
+        df_sl = df_reactions.loc[df_reactions["thread_name"] == person]
+        top = df_sl.groupby(["emoji", "reacting_person"]).size()
+        top = top.reset_index(level=['emoji', 'reacting_person']).rename(columns={0: "count"})
+        top = top.loc[top["count"] > 2]
+        mostMessagesHistogram = px.bar(top,
+                                       y="emoji", x="count", orientation="h", color="reacting_person")
         mostMessagesHistogram.update_yaxes(categoryorder="total ascending")
 
         return dcc.Graph(id="mostMessages",
-                         figure=mostMessagesHistogram
+                         figure=mostMessagesHistogram,
+                         config=dict(
+                             displayModeBar=False
+                         )
                          )
 
 
