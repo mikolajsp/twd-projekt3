@@ -174,7 +174,8 @@ tab1_layout = html.Div([
                 value=[unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
                        unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
                 marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
-                               pd.to_datetime(df['date'].tolist()).max())
+                               pd.to_datetime(df['date'].tolist()).max()),
+                tooltip={'placement': 'bottom', 'always_visible': False}
     ),
     html.Div(id='slider-period1'),
     html.Div(id="time-histogram-container"),
@@ -283,8 +284,8 @@ def showPeriod(range):
     start1 = datetime.fromtimestamp(range[0])
     end1 = datetime.fromtimestamp(range[1])
     # labels = {unixTimeMillis(m): (str(m.strftime('%Y-%m'))) for m in result}
-    start_label = str(start1.strftime('%Y-%m'))
-    end_label = str(end1.strftime('%Y-%m'))
+    start_label = str(start1.strftime('%Y-%m-%d'))
+    end_label = str(end1.strftime('%Y-%m-%d'))
     return f'Period from {start_label} to {end_label}'
 
 
@@ -533,7 +534,7 @@ def chatReactions(person, range):
         mask = (date_list >= start) & (date_list <= end)
         df_sl = df_sl.loc[mask]
         if df_sl.size == 0:
-            return html.Div(children='No messages in this period', style={'textAlign': 'center'})
+            return html.Div(children='No reactions in this period', style={'textAlign': 'center'})
 
         top = df_sl.groupby(["emoji", "reacting_person"]).size()
         top = top.reset_index(level=['emoji', 'reacting_person']).rename(columns={0: "count"})
