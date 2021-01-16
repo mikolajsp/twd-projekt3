@@ -302,7 +302,7 @@ def generalTimeHistogram(range):
     timeHistogram.update_xaxes(fixedrange=True)
     timeHistogram.update_layout(hovermode="x",
                                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                                legend_title=dict(font=dict(size=15)))
+                                legend_title=dict(font=dict(size=15)), title=dict(font=dict(size=23)))
     timeHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
     return dcc.Graph(
         id="default-histogram",
@@ -333,7 +333,7 @@ def generalHourHistogram(range):
                                tick0=0.0, dtick=1.0, fixedrange=True)
     hourHistogram.update_layout(hovermode="x", bargap=0.1,
                                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                                legend_title=dict(font=dict(size=15)))
+                                legend_title=dict(font=dict(size=15)), title=dict(font=dict(size=23)))
     hourHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
 
     return dcc.Graph(
@@ -419,7 +419,7 @@ def personTimeHistogram(person, range):
         personTimeHistogram.update_xaxes(title_text="Date", fixedrange=True)
         personTimeHistogram.update_layout(hovermode="x", legend=dict(orientation="h", yanchor="bottom", y=1.02,
                                                                      xanchor="right", x=1),
-                                          legend_title=dict(font=dict(size=15)))
+                                          legend_title=dict(font=dict(size=15)), title=dict(font=dict(size=23)))
         personTimeHistogram.update_traces(
             hovertemplate='Number of messages: %{y:f}')
         return dcc.Graph(
@@ -452,7 +452,7 @@ def personHourHistogram(person, range):
             title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0, fixedrange=True)
         personHourHistogram.update_layout(bargap=0.1, hovermode="x",
                                           legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                                          legend_title=dict(font=dict(size=15)))
+                                          legend_title=dict(font=dict(size=15)), title=dict(font=dict(size=23)))
         personHourHistogram.update_traces(
             hovertemplate='Number of messages: %{y:f}')
 
@@ -532,7 +532,7 @@ def chatReactions(person, range):
         mostMessagesHistogram.update_xaxes(title_text="Number of reactions", fixedrange=True)
         mostMessagesHistogram.update_layout(hovermode="closest",
                                             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                                            legend_title=dict(font=dict(size=15)))
+                                            legend_title=dict(font=dict(size=15)), title=dict(font=dict(size=23)))
         mostMessagesHistogram.update_traces(
             hovertemplate='Number of reactions: %{x:f}, %{y}')
 
