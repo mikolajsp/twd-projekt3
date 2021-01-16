@@ -217,7 +217,7 @@ app.layout = dbc.Container([
                                          df.loc[df["thread_type"] == "Regular"].thread_name.unique()])
                         ])
                     ])
-                )
+                ), className="mb-3"
             ),
             dbc.Card(
                 dbc.CardBody(
@@ -242,8 +242,8 @@ app.layout = dbc.Container([
                         step=86400,
                         pushable=200000
                     ),
-                    html.Div(id='slider-period1')],
-                    className="pt-4 px-4")]
+                    html.Div(id='slider-period1', className="mb-3")],
+                    className="pt-4 px-4")], className="mb-3"
             ),
             dbc.Card([
                 html.Div(id="content", className="pt-4 px-4")]
