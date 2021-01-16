@@ -345,9 +345,9 @@ def generalHourHistogram(range):
                                  color_discrete_sequence=[
                                      "#264653", "#2a9d8f"],
                                  labels={"who": "Number of messages: "})
-    hourHistogram.update_yaxes(title_text="Number of messages")
-    hourHistogram.update_xaxes(
-        title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0)
+    hourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
+    hourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear',
+                               tick0=0.0, dtick=1.0, fixedrange=True)
     hourHistogram.update_layout(hovermode="x", bargap=0.1)
     hourHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
 
@@ -462,7 +462,9 @@ def personHourHistogram(person, range):
         personHourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personHourHistogram.update_xaxes(
             title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0, fixedrange=True)
-        personHourHistogram.update_layout(bargap=0.1, hovermode="x")
+        personHourHistogram.update_layout(bargap=0.1, hovermode="x", legend=dict(orientation="h", yanchor="bottom",
+                                                                                 y=1.02, xanchor="right", x=1),
+                                          legend_title=dict(font=dict(size=20)))
         personHourHistogram.update_traces(
             hovertemplate='Number of messages: %{y:f}')
 
@@ -542,6 +544,7 @@ def chatReactions(person, range):
                                        labels={"reacting_person": "Person who reacted"})
         mostMessagesHistogram.update_yaxes(title_text="Emoji", categoryorder="total ascending", fixedrange=True)
         mostMessagesHistogram.update_xaxes(title_text="Number of reactions", fixedrange=True)
+        #mostMessagesHistogram.update_layout(hovermode="closest", legend_orientation='h')
         mostMessagesHistogram.update_layout(hovermode="closest")
         mostMessagesHistogram.update_traces(
             hovertemplate='Number of reactions %{x:f}, %{y}')
