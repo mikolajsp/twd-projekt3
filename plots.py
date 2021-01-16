@@ -363,7 +363,7 @@ def generateStatistics(range):
     avgTheirCharCount = df_slice.loc[df_slice["author"] != owner, "chars"].mean()
 
     return """
-    # Statistics
+    ## Statistics
     We're analyzing your data from **{}**, to  **{}**, that is **{} days**.
 
     In that time period **you sent {} messages** and **received {} messages**. That makes a total of {} messeges.
@@ -404,7 +404,7 @@ def personTimeHistogram(person, range):
             return html.Div(children='No messages in this period', style={'textAlign': 'center'})
 
         personTimeHistogram = px.histogram(df_slice, x="date", color="author",
-                                           labels={"author": "Author of the message"},
+                                           labels={"author": "Author of the message: "},
                                            title="Your conversation through the time period")
         personTimeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personTimeHistogram.update_xaxes(title_text="Date", fixedrange=True)
@@ -437,7 +437,7 @@ def personHourHistogram(person, range):
             return html.Div(children='No messages in this period', style={'textAlign': 'center'})
         personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[-0.5, 23.5], nbins=24,
                                            title="Breakdown of messages sent by hour", color_discrete_sequence=[
-                "#264653", "#2a9d8f"], labels={"author": "Author of the message"})
+                "#264653", "#2a9d8f"], labels={"author": "Author of the message: "})
         personHourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personHourHistogram.update_xaxes(
             title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0, fixedrange=True)
@@ -518,7 +518,7 @@ def chatReactions(person, range):
         mostMessagesHistogram = px.bar(top,
                                        y="emoji", x="count", orientation="h", color="reacting_person",
                                        title=f"Your reactions in chat with {person}",
-                                       labels={"reacting_person": "Person who reacted"})
+                                       labels={"reacting_person": "Person who reacted: "})
         mostMessagesHistogram.update_yaxes(title_text="Emoji", categoryorder="total ascending", fixedrange=True)
         mostMessagesHistogram.update_xaxes(title_text="Number of reactions", fixedrange=True)
         mostMessagesHistogram.update_layout(hovermode="closest",
