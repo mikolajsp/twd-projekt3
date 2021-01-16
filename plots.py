@@ -143,7 +143,7 @@ df['dateformat'] = pd.to_datetime(df['date'])
 # LAYOUT TEMPLATES FOR EACH TAB
 
 tab1_layout = html.Div([
-    html.H2("Overview of your data"),
+    html.H2("Summary of your data"),
     html.Div(id="time-histogram-container"),
     html.Div(id="hour-histogram-container"),
     dcc.Markdown(id ="statistic")
@@ -199,15 +199,18 @@ app.layout = dbc.Container([
                     ])
                 ), className="mb-3"
             ),
-            dbc.Card(
+            dbc.Card([
+                html.H3("Your Messenger Conversations", className="pt-4 px-4"),
                 dbc.CardBody(
                     html.P(["We invite you to explore your Messenger conversation data. ",
-                           "After choosing a period please wait a few seconds for the plots to reload.",
-                            "Select Person and choose a person from the list to see the conversation overview",
-                            "Select Reactions and choose a person from the list to see the reactions overview",
+                            html.Br(),
+                            "Choose a time period, hover with your mouse over the plot, click on the legend ",
+                            "or go to a different tab. ",
+                           "After choosing a period please wait a few seconds for the plots to reload. ",
+                            html.Br(),
                             html.Br(),
                             "Authors: Katarzyna Solawa, Mikołaj Spytek, Mateusz Sperkowski"])
-                )
+                )]
             )
         ], md=3
         ),
@@ -282,7 +285,7 @@ def generalTimeHistogram(range):
     timeHistogram = px.histogram(df_slice, x="date", color="who",
                                  color_discrete_sequence=[
                                      "#47A8BD", "#FFAD69"], title="Your messages over time", labels={
-        "date": "Date", "who": "Number of messages:"})
+        "date": "Date", "who": "Messages:"})
     timeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
     timeHistogram.update_xaxes(fixedrange=True)
     timeHistogram.update_layout(hovermode="x",
@@ -312,7 +315,7 @@ def generalHourHistogram(range):
                                  title="Breakdown of messages sent by hour",
                                  color_discrete_sequence=[
                                      "#47A8BD", "#FFAD69"],
-                                 labels={"who": "Number of messages: "})
+                                 labels={"who": "Messages: "})
     hourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
     hourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear',
                                tick0=0.0, dtick=1.0, fixedrange=True)
@@ -400,7 +403,7 @@ def personTimeHistogram(person, range):
         personTimeHistogram = px.histogram(df_slice, x="date", color="author",
                                  color_discrete_sequence=[
                                      "#47A8BD", "#FFAD69"],
-                                           labels={"author": "Author of the message: "},
+                                           labels={"author": "Author: "},
                                            title="Your conversation through the time period")
         personTimeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personTimeHistogram.update_xaxes(title_text="Date", fixedrange=True)
@@ -434,7 +437,7 @@ def personHourHistogram(person, range):
         personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[-0.5, 23.5], nbins=24,
                                            title="Breakdown of messages sent by hour",
                                  color_discrete_sequence=[
-                                     "#47A8BD", "#FFAD69"], labels={"author": "Author of the message: "})
+                                     "#47A8BD", "#FFAD69"], labels={"author": "Author: "})
         personHourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personHourHistogram.update_xaxes(
             title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0, fixedrange=True)
