@@ -167,17 +167,6 @@ df['dateformat'] = pd.to_datetime(df['date'])
 
 tab1_layout = html.Div([
     html.H2("Overview of your data"),
-    dcc.RangeSlider(
-                id='year_slider1',
-                min=unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
-                max=unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
-                value=[unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
-                       unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
-                marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
-                               pd.to_datetime(df['date'].tolist()).max()),
-                tooltip={'placement': 'bottom', 'always_visible': False}
-    ),
-    html.Div(id='slider-period1'),
     html.Div(id="time-histogram-container"),
     html.Div(id="hour-histogram-container"),
     dcc.Markdown(id ="statistic")
@@ -188,16 +177,6 @@ tab2_layout = html.Div([
     html.Div(
         id="person-charts-container",
         children=[
-            dcc.RangeSlider(
-                id='year_slider2',
-                min=unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
-                max=unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
-                value=[unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
-                       unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
-                marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
-                               pd.to_datetime(df['date'].tolist()).max())
-            ),
-            html.Div(id='slider-period2'),
             html.Div(id="person-time-histogram-container"),
             html.Div(id="person-hour-histogram-container"),
             html.Div(id="person-wordclouds-container")
@@ -207,16 +186,6 @@ tab2_layout = html.Div([
 
 tab3_layout = html.Div([
     html.H2("Data of reactions in your threads"),
-    dcc.RangeSlider(
-                id='year_slider3',
-                min=unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
-                max=unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
-                value=[unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
-                       unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
-                marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
-                               pd.to_datetime(df['date'].tolist()).max())
-    ),
-    html.Div(id='slider-period3'),
     html.Div(id="reactions-output",
              children=[
                  html.Div(id="reactions-container")
@@ -255,8 +224,21 @@ app.layout = dbc.Container([
             ), md=3
         ),
         dbc.Col(
-            dbc.Card(
-                html.Div(id="content", className="pt-4 px-4")
+            dbc.Card([
+                html.Div([
+                    html.H3("Choose a time period"),
+                    dcc.RangeSlider(
+                        id='year_slider1',
+                        min=unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                        max=unixTimeMillis(pd.to_datetime(df['date'].tolist()).max()),
+                        value=[unixTimeMillis(pd.to_datetime(df['date'].tolist()).min()),
+                               unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
+                        marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
+                                       pd.to_datetime(df['date'].tolist()).max()),
+                        tooltip={'placement': 'bottom', 'always_visible': False}),
+                    html.Div(id='slider-period1')],
+                    className="pt-4 px-4"),
+                html.Div(id="content", className="pt-4 px-4")]
             ), md=9, className="overflow-auto"
         )
     ])
@@ -296,16 +278,6 @@ def showPeriod1(range):
     return showPeriod(range)
 
 
-@app.callback(Output("slider-period2", "children"),
-              Input("year_slider2", "value"),)
-def showPeriod2(range):
-    return showPeriod(range)
-
-@app.callback(Output("slider-period3", "children"),
-              Input("year_slider3", "value"),)
-def showPeriod2(range):
-    return showPeriod(range)
-
 @app.callback(Output("time-histogram-container", "children"),
               Input("year_slider1", "value"),)
 def generalTimeHistogram(range):
@@ -320,7 +292,9 @@ def generalTimeHistogram(range):
         "date": "Date", "who": "Number of messages:"})
     timeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
     timeHistogram.update_xaxes(fixedrange=True)
-    timeHistogram.update_layout(hovermode="x")
+    timeHistogram.update_layout(hovermode="x",
+                                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                                legend_title=dict(font=dict(size=15)))
     timeHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
     return dcc.Graph(
         id="default-histogram",
@@ -349,7 +323,9 @@ def generalHourHistogram(range):
     hourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
     hourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear',
                                tick0=0.0, dtick=1.0, fixedrange=True)
-    hourHistogram.update_layout(hovermode="x", bargap=0.1)
+    hourHistogram.update_layout(hovermode="x", bargap=0.1,
+                                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                                legend_title=dict(font=dict(size=15)))
     hourHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
 
     return dcc.Graph(
@@ -415,7 +391,7 @@ def generateStatistics(range):
 
 @app.callback(Output("person-time-histogram-container", "children"),
               Input("person-dropdown", "value"),
-              Input("year_slider2", "value"))
+              Input("year_slider1", "value"))
 def personTimeHistogram(person, range):
     if person:
         df_slice = df.loc[df["thread_name"] == person]
@@ -432,7 +408,9 @@ def personTimeHistogram(person, range):
                                            title="Your conversation through the time period")
         personTimeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personTimeHistogram.update_xaxes(title_text="Date", fixedrange=True)
-        personTimeHistogram.update_layout(hovermode="x")
+        personTimeHistogram.update_layout(hovermode="x", legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                                                                     xanchor="right", x=1),
+                                          legend_title=dict(font=dict(size=15)))
         personTimeHistogram.update_traces(
             hovertemplate='Number of messages: %{y:f}')
         return dcc.Graph(
@@ -446,7 +424,7 @@ def personTimeHistogram(person, range):
 
 @app.callback(Output("person-hour-histogram-container", "children"),
               Input("person-dropdown", "value"),
-              Input("year_slider2", "value"))
+              Input("year_slider1", "value"))
 def personHourHistogram(person, range):
     if person:
         df_slice = df.loc[df["thread_name"] == person]
@@ -463,9 +441,9 @@ def personHourHistogram(person, range):
         personHourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personHourHistogram.update_xaxes(
             title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0, fixedrange=True)
-        personHourHistogram.update_layout(bargap=0.1, hovermode="x", legend=dict(orientation="h", yanchor="bottom",
-                                                                                 y=1.02, xanchor="right", x=1),
-                                          legend_title=dict(font=dict(size=20)))
+        personHourHistogram.update_layout(bargap=0.1, hovermode="x",
+                                          legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                                          legend_title=dict(font=dict(size=15)))
         personHourHistogram.update_traces(
             hovertemplate='Number of messages: %{y:f}')
 
@@ -478,12 +456,10 @@ def personHourHistogram(person, range):
         )
 
 
-# this is a mess but we'll have to live with it for now
-
 
 @app.callback(Output("person-wordclouds-container", "children"),
               Input("person-dropdown", "value"),
-              Input("year_slider2", "value"))
+              Input("year_slider1", "value"))
 def personWordclouds(person, range):
     if person:
         yourWordcloud = generatePersonWordCloudImage(person, True, range)
@@ -523,7 +499,7 @@ def personWordclouds(person, range):
 
 @app.callback(Output("reactions-container", "children"),
               Input("reactions-dropdown", "value"),
-              Input("year_slider3", "value"))
+              Input("year_slider1", "value"))
 def chatReactions(person, range):
     if person:
         df_sl = df_reactions.loc[df_reactions["thread_name"] == person]
@@ -545,10 +521,11 @@ def chatReactions(person, range):
                                        labels={"reacting_person": "Person who reacted"})
         mostMessagesHistogram.update_yaxes(title_text="Emoji", categoryorder="total ascending", fixedrange=True)
         mostMessagesHistogram.update_xaxes(title_text="Number of reactions", fixedrange=True)
-        #mostMessagesHistogram.update_layout(hovermode="closest", legend_orientation='h')
-        mostMessagesHistogram.update_layout(hovermode="closest")
+        mostMessagesHistogram.update_layout(hovermode="closest",
+                                            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                                            legend_title=dict(font=dict(size=15)))
         mostMessagesHistogram.update_traces(
-            hovertemplate='Number of reactions %{x:f}, %{y}')
+            hovertemplate='Number of reactions: %{x:f}, %{y}')
 
         return dcc.Graph(id="mostMessages",
                          figure=mostMessagesHistogram,
