@@ -320,7 +320,7 @@ def generalTimeHistogram(range):
     timeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
     timeHistogram.update_xaxes(fixedrange=True)
     timeHistogram.update_layout(hovermode="x")
-    timeHistogram.update_traces(hovertemplate='Number of messages: %{y}')
+    timeHistogram.update_traces(hovertemplate='Number of messages: %{y:f}')
     return dcc.Graph(
         id="default-histogram",
         figure=timeHistogram,
@@ -426,12 +426,14 @@ def personTimeHistogram(person, range):
         if df_slice.size == 0:
             return html.Div(children='No messages in this period', style={'textAlign': 'center'})
 
-        personTimeHistogram = px.histogram(df_slice, x="date", color="author")
+        personTimeHistogram = px.histogram(df_slice, x="date", color="author",
+                                           labels={"author": "Author of the message"},
+                                           title="Your conversation through the time period")
         personTimeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personTimeHistogram.update_xaxes(title_text="Date", fixedrange=True)
         personTimeHistogram.update_layout(hovermode="x")
         personTimeHistogram.update_traces(
-            hovertemplate='Number of messages: %{y}')
+            hovertemplate='Number of messages: %{y:f}')
         return dcc.Graph(
             id="person-histogram",
             figure=personTimeHistogram,
@@ -462,7 +464,7 @@ def personHourHistogram(person, range):
             title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0, fixedrange=True)
         personHourHistogram.update_layout(bargap=0.1, hovermode="x")
         personHourHistogram.update_traces(
-            hovertemplate='Number of messages: %{y}')
+            hovertemplate='Number of messages: %{y:f}')
 
         return dcc.Graph(
             id="person-hour-histogram",
@@ -535,8 +537,14 @@ def chatReactions(person, range):
         top = top.reset_index(level=['emoji', 'reacting_person']).rename(columns={0: "count"})
         top = top.loc[top["count"] > 2]
         mostMessagesHistogram = px.bar(top,
-                                       y="emoji", x="count", orientation="h", color="reacting_person")
-        mostMessagesHistogram.update_yaxes(categoryorder="total ascending")
+                                       y="emoji", x="count", orientation="h", color="reacting_person",
+                                       title=f"Your reactions in chat with {person}",
+                                       labels={"reacting_person": "Person who reacted"})
+        mostMessagesHistogram.update_yaxes(title_text="Emoji", categoryorder="total ascending", fixedrange=True)
+        mostMessagesHistogram.update_xaxes(title_text="Number of reactions", fixedrange=True)
+        mostMessagesHistogram.update_layout(hovermode="closest")
+        mostMessagesHistogram.update_traces(
+            hovertemplate='Number of reactions %{x:f}, %{y}')
 
         return dcc.Graph(id="mostMessages",
                          figure=mostMessagesHistogram,
