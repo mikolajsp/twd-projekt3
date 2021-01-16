@@ -201,8 +201,12 @@ app.layout = dbc.Container([
             ),
             dbc.Card(
                 dbc.CardBody(
-                    html.P("We invite you to explore your Messenger conversation data. "
-                           "After choosing a period please wait a few seconds for the plots to reload.")
+                    html.P(["We invite you to explore your Messenger conversation data. ",
+                           "After choosing a period please wait a few seconds for the plots to reload.",
+                            "Select Person and choose a person from the list to see the conversation overview",
+                            "Select Reactions and choose a person from the list to see the reactions overview",
+                            html.Br(),
+                            "Authors: Katarzyna Solawa, Mikołaj Spytek, Mateusz Sperkowski"])
                 )
             )
         ], md=3
