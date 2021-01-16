@@ -296,7 +296,9 @@ def generalTimeHistogram(range):
     df_slice = df.loc[mask]
     if df_slice.size == 0:
         return html.Div(children='No messages in this period', style={'textAlign': 'center'})
-    timeHistogram = px.histogram(df_slice, x="date", color="who", title="Your messages over time", labels={
+    timeHistogram = px.histogram(df_slice, x="date", color="who",
+                                 color_discrete_sequence=[
+                                     "#47A8BD", "#FFAD69"], title="Your messages over time", labels={
         "date": "Date", "who": "Number of messages:"})
     timeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
     timeHistogram.update_xaxes(fixedrange=True)
@@ -326,7 +328,7 @@ def generalHourHistogram(range):
     hourHistogram = px.histogram(df_slice, x="hour", color="who", range_x=[-0.5, 23.5], nbins=24,
                                  title="Breakdown of messages sent by hour",
                                  color_discrete_sequence=[
-                                     "#264653", "#2a9d8f"],
+                                     "#47A8BD", "#FFAD69"],
                                  labels={"who": "Number of messages: "})
     hourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
     hourHistogram.update_xaxes(title_text="Hour of day", nticks=24, tickmode='linear',
@@ -413,6 +415,8 @@ def personTimeHistogram(person, range):
             return html.Div(children='No messages in this period', style={'textAlign': 'center'})
 
         personTimeHistogram = px.histogram(df_slice, x="date", color="author",
+                                 color_discrete_sequence=[
+                                     "#47A8BD", "#FFAD69"],
                                            labels={"author": "Author of the message: "},
                                            title="Your conversation through the time period")
         personTimeHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
@@ -445,8 +449,9 @@ def personHourHistogram(person, range):
         if df_slice.size == 0:
             return html.Div(children='No messages in this period', style={'textAlign': 'center'})
         personHourHistogram = px.histogram(df_slice, x="hour", color="author", range_x=[-0.5, 23.5], nbins=24,
-                                           title="Breakdown of messages sent by hour", color_discrete_sequence=[
-                "#264653", "#2a9d8f"], labels={"author": "Author of the message: "})
+                                           title="Breakdown of messages sent by hour",
+                                 color_discrete_sequence=[
+                                     "#47A8BD", "#FFAD69"], labels={"author": "Author of the message: "})
         personHourHistogram.update_yaxes(title_text="Number of messages", fixedrange=True)
         personHourHistogram.update_xaxes(
             title_text="Hour of day", nticks=24, tickmode='linear', tick0=0.0, dtick=1.0, fixedrange=True)
@@ -525,7 +530,9 @@ def chatReactions(person, range):
         top = top.reset_index(level=['emoji', 'reacting_person']).rename(columns={0: "count"})
         top = top.loc[top["count"] > 2]
         mostMessagesHistogram = px.bar(top,
-                                       y="emoji", x="count", orientation="h", color="reacting_person",
+                                       y="emoji", x="count", orientation="h",
+                                 color_discrete_sequence=[
+                                     "#47A8BD", "#FFAD69"], color="reacting_person",
                                        title=f"Your reactions in chat with {person}",
                                        labels={"reacting_person": "Person who reacted: "})
         mostMessagesHistogram.update_yaxes(title_text="Emoji", categoryorder="total ascending", fixedrange=True)
