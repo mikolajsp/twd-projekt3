@@ -47,9 +47,6 @@ def generateMessageOwner(val, owner):
         return "Received"
 
 
-
-
-
 def generateWordCloudImage(thread, isowner):
     wcimg = None
     df_slice = df.loc[df["thread_name"] == thread]
@@ -200,7 +197,7 @@ app.config.suppress_callback_exceptions = True
 
 app.layout = dbc.Container([
     dbc.Row([
-        dbc.Col(
+        dbc.Col([
             dbc.Card(
                 dbc.CardBody(
                     dbc.Tabs(id="tabs", active_tab="tab1", children=[
@@ -221,7 +218,13 @@ app.layout = dbc.Container([
                         ])
                     ])
                 )
-            ), md=3
+            ),
+            dbc.Card(
+                dbc.CardBody(
+                    html.P("Hello There, General Kenobi.")
+                )
+            )
+        ], md=3
         ),
         dbc.Col(
             dbc.Card([
@@ -235,7 +238,10 @@ app.layout = dbc.Container([
                                unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
                         marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
                                        pd.to_datetime(df['date'].tolist()).max()),
-                        tooltip={'placement': 'bottom', 'always_visible': False}),
+                        tooltip={'placement': 'bottom', 'always_visible': False},
+                        step=86400,
+                        pushable=200000
+                    ),
                     html.Div(id='slider-period1')],
                     className="pt-4 px-4"),
                 html.Div(id="content", className="pt-4 px-4")]
@@ -355,6 +361,7 @@ def generateStatistics(range):
     numYourMsg = len(df_slice.loc[df_slice["author"] == owner])
     numTheirMsg = len(df_slice.loc[df_slice["author"] != owner])
     daysNum = abs(endDate - startDate).days
+    daysNum += 1
     avgYourMsgPerDay = numYourMsg / daysNum
     avgYourWordCount = df_slice.loc[df_slice["author"] == owner, "words"].mean()
     avgYourCharCount = df_slice.loc[df_slice["author"] == owner, "chars"].mean()
