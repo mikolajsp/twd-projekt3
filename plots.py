@@ -226,7 +226,7 @@ app.layout = dbc.Container([
             )
         ], md=3
         ),
-        dbc.Col(
+        dbc.Col([
             dbc.Card([
                 html.Div([
                     html.H3("Choose a time period"),
@@ -243,9 +243,11 @@ app.layout = dbc.Container([
                         pushable=200000
                     ),
                     html.Div(id='slider-period1')],
-                    className="pt-4 px-4"),
+                    className="pt-4 px-4")]
+            ),
+            dbc.Card([
                 html.Div(id="content", className="pt-4 px-4")]
-            ), md=9, className="overflow-auto"
+            ), ], md=9, className="overflow-auto"
         )
     ])
 
