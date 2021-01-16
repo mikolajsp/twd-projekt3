@@ -46,47 +46,6 @@ def generateMessageOwner(val, owner):
     else:
         return "Received"
 
-
-def make_colormap(seq):
-    seq = [(None,) * 3, 0.0] + list(seq) + [1.0, (None,) * 3]
-    cdict = {'red': [], 'green': [], 'blue': []}
-    for i, item in enumerate(seq):
-        if isinstance(item, float):
-            r1, g1, b1 = seq[i - 1]
-            r2, g2, b2 = seq[i + 1]
-            cdict['red'].append([item, r1, r2])
-            cdict['green'].append([item, g1, g2])
-            cdict['blue'].append([item, b1, b2])
-    return mcolors.LinearSegmentedColormap('CustomMap', cdict)
-
-def diverge_map(high=(71, 168, 189), low=(255, 173, 105)):
-    c = mcolors.ColorConverter().to_rgb
-    return make_colormap([low, c('white'), 0.5, c('white'), high])
-
-def generateWordCloudImage(thread, isowner):
-    wcimg = None
-    df_slice = df.loc[df["thread_name"] == thread]
-    if isowner:
-        text = df_slice.loc[df_slice["author"]
-                            == owner].content.str.cat(sep=" ")
-    else:
-        text = df_slice.loc[df_slice["author"]
-                            != owner].content.str.cat(sep=" ")
-    if len(text) > 0:
-        wordcloud = WordCloud(
-            width=1200,
-            height=600,
-            background_color="rgba(255, 255, 255, 0)",
-            mode="RGBA",
-            stopwords=stop_words,
-            collocations=False,
-            #colormap=diverge_map()
-            colormap="Blues"
-        ).generate(text)
-        wcimg = wordcloud.to_image()
-    return wcimg
-
-
 def generatePersonWordCloudImage(thread, isowner, range):
     wcimg = None
     df_slice = df.loc[df["thread_name"] == thread]
@@ -110,7 +69,7 @@ def generatePersonWordCloudImage(thread, isowner, range):
             mode="RGBA",
             stopwords=stop_words,
             collocations=False,
-            colormap=mcolors.LinearSegmentedColormap.from_list('custom blue',[(0, '#47A8BD'),(0.5, '#F5E663'), (1, '#FFAD69')], N=256)
+            colormap=mcolors.LinearSegmentedColormap.from_list('custom colormap', ['#47A8BD', '#FFAD69'], N=2)
         ).generate(text)
         wcimg = wordcloud.to_image()
     return wcimg
