@@ -514,7 +514,9 @@ def chatReactions(person, range):
 
         top = df_sl.groupby(["emoji", "reacting_person"]).size()
         top = top.reset_index(level=['emoji', 'reacting_person']).rename(columns={0: "count"})
-        top = top.loc[top["count"] > 2]
+        top = top.loc[top["count"] > 0]
+        if top.size == 0:
+            return html.Div(children='No reactions in this period', style={'textAlign': 'center'})
         mostMessagesHistogram = px.bar(top,
                                        y="emoji", x="count", orientation="h",
                                  color_discrete_sequence=[
