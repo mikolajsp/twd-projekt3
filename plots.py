@@ -10,7 +10,7 @@ from wordcloud import WordCloud
 from datetime import datetime
 import time
 from dateutil.relativedelta import relativedelta
-
+import matplotlib.colors as mcolors
 
 # HELPER FUNCTIONS
 
@@ -47,6 +47,22 @@ def generateMessageOwner(val, owner):
         return "Received"
 
 
+def make_colormap(seq):
+    seq = [(None,) * 3, 0.0] + list(seq) + [1.0, (None,) * 3]
+    cdict = {'red': [], 'green': [], 'blue': []}
+    for i, item in enumerate(seq):
+        if isinstance(item, float):
+            r1, g1, b1 = seq[i - 1]
+            r2, g2, b2 = seq[i + 1]
+            cdict['red'].append([item, r1, r2])
+            cdict['green'].append([item, g1, g2])
+            cdict['blue'].append([item, b1, b2])
+    return mcolors.LinearSegmentedColormap('CustomMap', cdict)
+
+def diverge_map(high=(71, 168, 189), low=(255, 173, 105)):
+    c = mcolors.ColorConverter().to_rgb
+    return make_colormap([low, c('white'), 0.5, c('white'), high])
+
 def generateWordCloudImage(thread, isowner):
     wcimg = None
     df_slice = df.loc[df["thread_name"] == thread]
@@ -63,7 +79,10 @@ def generateWordCloudImage(thread, isowner):
             background_color="rgba(255, 255, 255, 0)",
             mode="RGBA",
             stopwords=stop_words,
-            collocations=False).generate(text)
+            collocations=False,
+            #colormap=diverge_map()
+            colormap="Blues"
+        ).generate(text)
         wcimg = wordcloud.to_image()
     return wcimg
 
@@ -87,10 +106,12 @@ def generatePersonWordCloudImage(thread, isowner, range):
         wordcloud = WordCloud(
             width=1200,
             height=600,
-            background_color="rgba(255, 255, 255, 0)",
+            background_color="white",
             mode="RGBA",
             stopwords=stop_words,
-            collocations=False).generate(text)
+            collocations=False,
+            colormap=mcolors.LinearSegmentedColormap.from_list('custom blue',[(0, '#47A8BD'),(0.5, '#F5E663'), (1, '#FFAD69')], N=256)
+        ).generate(text)
         wcimg = wordcloud.to_image()
     return wcimg
 
@@ -221,7 +242,8 @@ app.layout = dbc.Container([
             ),
             dbc.Card(
                 dbc.CardBody(
-                    html.P("Hello There, General Kenobi.")
+                    html.P("We invite you to explore your Messenger conversation data. "
+                           "After choosing a period please wait a few seconds for the plots to reload.")
                 )
             )
         ], md=3
@@ -238,7 +260,6 @@ app.layout = dbc.Container([
                                unixTimeMillis(pd.to_datetime(df['date'].tolist()).max())],
                         marks=getMarks(pd.to_datetime(df['date'].tolist()).min(),
                                        pd.to_datetime(df['date'].tolist()).max()),
-                        tooltip={'placement': 'bottom', 'always_visible': False},
                         step=86400,
                         pushable=200000
                     ),
@@ -273,7 +294,6 @@ def render_content(tab):
 def showPeriod(range):
     start1 = datetime.fromtimestamp(range[0])
     end1 = datetime.fromtimestamp(range[1])
-    # labels = {unixTimeMillis(m): (str(m.strftime('%Y-%m'))) for m in result}
     start_label = str(start1.strftime('%Y-%m-%d'))
     end_label = str(end1.strftime('%Y-%m-%d'))
     return f'Period from {start_label} to {end_label}'
