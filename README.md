@@ -2,11 +2,11 @@
 
 1. Sklonować sobie to repozytorium, żeby mieć lokalnie
 2. Pobrać dane z Facebook:
-    a. -> "Ustawienia"
-    b. -> "Twoje infromacje na Facebooku"
-    c. -> "Pobieranie twoich infromacji"
-    d. wybierz "Wiadomości" i ustaw format JSON(można niską jakość)
-    e. utwórz plik(Facebook wyśle powiadomienie, kiedy plik będzie gotowy)
+    1. -> "Ustawienia"
+    2. -> "Twoje infromacje na Facebooku"
+    3. -> "Pobieranie twoich infromacji"
+    4. wybierz "Wiadomości" i ustaw format JSON(można niską jakość)
+    5. utwórz plik(Facebook wyśle powiadomienie, kiedy plik będzie gotowy)
 3. Paczkę danych z facebooka wypakować do tego samego folderu (to znaczy te skrypty pythonowe powinny być na tym samym poziomie co folder messages)
 4. Zainstalować sobie biblioteki pythonowe: na razie korzystam z `dash`, `pandas`, `wordcloud`, `dash_bootstrap_components`. Tu zależy jak macie zainstalowanego, jak normalnie to wystarczy w konsoli `pip install <<nazwa paczki>>`, a jak przez anacondę, to jakoś inaczej.
 5. Uruchomić `generate.py`, a pózniej `plots.py`. Stworzy się lokalny serwer z tymi wykresami.
