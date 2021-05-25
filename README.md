@@ -1,3 +1,11 @@
+# Some screenshots
+
+![screenshot1](screenshots/ss1.png)
+
+![screenshot2](screenshots/ss2.png)
+
+![screenshots3](screenshots/ss2.png)
+
 # Analiza danych z messengera. Jak uruchomić?
 
 1. Pobrać folder zawierający trzy skrypty: `generate.py`, `plots.py` i `clear_messages_dir.py`, żeby mieć lokalnie
